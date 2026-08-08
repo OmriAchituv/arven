@@ -16,6 +16,20 @@ on the web.** That has to work well before anything else is built.
 Built by one person as a side project. Multi-user comes later, but the data model should not have to
 be rewritten when it does.
 
+## Read this first
+
+**`docs/brand-brief.md` governs this project.** Read it before proposing a feature, writing UI copy,
+choosing a colour, or naming anything. Every decision should be dictated by it.
+
+The two-part brand test for anything user-facing: *would this feel natural at a world-class longevity
+retreat, and inside a world-class technology product?* If only the first, it's too spa-like. If only
+the second, it's too technological.
+
+Explicitly forbidden by the brief: gamification, streaks, confetti, sparkle or robot iconography,
+purple gradients, visible "AI" labelling, diet-culture language ("cheat meal", "clean eating",
+"guilty", "crush it"), and notifications that manufacture engagement. The voice is short, calm,
+specific, low-emotion, high-information — never marketing, never congratulatory.
+
 ## Hard constraints
 
 These are not preferences. Check any proposal against them.
