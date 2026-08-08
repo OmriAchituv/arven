@@ -12,3 +12,8 @@ coverage/
 playwright-report/
 test-results/
 .turbo/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
