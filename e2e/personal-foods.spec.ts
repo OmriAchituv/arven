@@ -34,6 +34,11 @@ test.describe("your own foods", () => {
     await page.getByTestId("food-carbs").fill("26");
     await page.getByTestId("food-fat").fill("9");
     await page.getByTestId("save-food").click();
+
+    // The form navigates once the mutation resolves. Without waiting for it, a
+    // page.goto() that follows cancels the request in flight — which passes
+    // locally, where it is fast, and fails against a real deployment.
+    await page.waitForURL((url) => !url.pathname.endsWith("/foods/new"));
   }
 
   test("offers to create a food when the search finds nothing", async ({ page }) => {
