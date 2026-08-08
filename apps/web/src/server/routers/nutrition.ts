@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { dayOfEating, findFood, recordEating } from "@arven/nutrition";
+import { dayOfEating, findFood, recordEating, weighIt } from "@arven/nutrition";
 import { dayKeyOf } from "@arven/nutrition";
 
 import { db } from "~/server/db";
@@ -55,4 +55,8 @@ export const nutritionRouter = router({
         eatenAt: input.eatenAt ?? new Date(),
       }),
     ),
+
+  weigh: publicProcedure
+    .input(z.object({ entryId: z.string().min(1), grams: z.number().positive() }))
+    .mutation(({ input }) => weighIt(db(), input.entryId, input.grams)),
 });

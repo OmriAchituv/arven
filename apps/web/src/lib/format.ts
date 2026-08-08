@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 /**
  * How ARVEN writes numbers, dates and times in Hebrew.
  *
@@ -59,3 +61,17 @@ export function grams(value: number): string {
 export function macro(value: number): string {
   return `${Math.round(value)} ג׳`;
 }
+
+/**
+ * Characters like `±`, `~` and `-` have no direction of their own, so in a
+ * right-to-left paragraph they attach to the wrong side of their number —
+ * `± 13` renders as `13 ±`. Isolating the whole token as left-to-right keeps
+ * the sign where it belongs without disturbing the Hebrew around it.
+ *
+ * Appendix A29 names this as the most common RTL rendering bug, and it is.
+ */
+export const LTR_NUMBER: CSSProperties = {
+  direction: "ltr",
+  unicodeBidi: "isolate",
+  display: "inline-block",
+};

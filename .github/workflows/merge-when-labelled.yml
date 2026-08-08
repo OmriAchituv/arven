@@ -1,16 +1,18 @@
-name: Merge on approval
+name: Merge when labelled
 
-# Branch protection would be the natural way to say "CI must pass before this
-# can merge", but it needs GitHub Pro on a private repository. This does the
-# same job for nothing: approving a pull request merges it, and only if the
-# checks on that exact commit came back green.
+# Add the `merge` label to a pull request and it lands, but only if the checks
+# on that exact commit came back green.
+#
+# This was originally triggered by an approval, which was useless: GitHub does
+# not let you approve your own pull request, and on a one-person project every
+# pull request is your own. A label works regardless of who opened it.
 #
 # Nothing here can deploy a red build — the merge simply does not happen, and
 # the run says why.
 
 on:
-  pull_request_review:
-    types: [submitted]
+  pull_request:
+    types: [labeled]
 
 permissions:
   contents: write
@@ -19,7 +21,7 @@ permissions:
 
 jobs:
   merge:
-    if: github.event.review.state == 'approved'
+    if: github.event.label.name == 'merge'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -68,7 +70,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr comment "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}" \
-            --body "Approved, but not merging — the checks on \`${{ github.event.pull_request.head.sha }}\` are not green. Fix them and approve again."
+            --body "Labelled `merge`, but not merging — the checks on \`${{ github.event.pull_request.head.sha }}\` are not green. Fix them, then add the label again."
           exit 1
 
       - name: Rebase and merge

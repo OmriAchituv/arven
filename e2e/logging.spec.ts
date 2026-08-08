@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
+import { clearTheDay } from "./support/db";
+
 const PASSPHRASE = process.env.ARVEN_PASSPHRASE ?? "test-passphrase";
 
 /**
@@ -12,6 +14,8 @@ const PASSPHRASE = process.env.ARVEN_PASSPHRASE ?? "test-passphrase";
  */
 test.describe("logging a food", () => {
   test.skip(!process.env.DATABASE_URL, "no DATABASE_URL configured");
+
+  test.beforeEach(clearTheDay);
 
   async function signIn(page: Page) {
     await page.goto("/login");
@@ -72,7 +76,7 @@ test.describe("logging a food", () => {
     await expect(page).toHaveURL("/");
 
     // It is on the day, and it is grounded.
-    const entry = page.getByRole("listitem").first();
+    const entry = page.getByRole("listitem").filter({ hasText: "200 ג׳" }).first();
     await expect(entry).toContainText(chosen.slice(0, 8).trim());
     await expect(entry).toContainText("200 ג׳");
     await expect(page.getByLabel("מבוסס").first()).toBeVisible();
