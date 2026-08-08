@@ -28,7 +28,9 @@ export default function LoginPage() {
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           <Wordmark size="2rem" />
-          <p style={{ margin: 0, color: "var(--ink-soft)" }}>הבריאות שלך. מובנת.</p>
+          <p style={{ margin: 0, color: "var(--ink-soft)" }}>
+            התמונה המלאה של הבריאות שלך.
+          </p>
         </div>
 
         <form

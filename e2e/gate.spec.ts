@@ -7,7 +7,7 @@ test.describe("the gate", () => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByPlaceholder("סיסמה")).toBeVisible();
-    await expect(page.getByText("הבריאות שלך. מובנת.")).toBeVisible();
+    await expect(page.getByText("התמונה המלאה של הבריאות שלך.")).toBeVisible();
     await page.screenshot({ path: "test-results/screens/login.png", fullPage: true });
   });
 
