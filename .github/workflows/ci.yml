@@ -91,17 +91,27 @@ jobs:
             const dir = '.github/screens';
             const shots = fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => f.endsWith('.png')).sort() : [];
             const passed = '${{ job.status }}' === 'success';
-            const branch = context.payload.pull_request.head.ref;
-            const base = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/blob/${branch}/.github/screens`;
+            const sha = context.payload.pull_request.head.sha;
+            // Pinned to the commit rather than the branch, so the images in this
+            // comment keep showing the state that was reviewed even after more
+            // is pushed.
+            const raw = `https://raw.githubusercontent.com/${context.repo.owner}/${context.repo.repo}/${sha}/.github/screens`;
+
+            const gallery = shots
+              .map((s) => {
+                const name = s.replace(/\.png$/, '');
+                return `<td align="center" width="25%"><img src="${raw}/${s}" width="220" alt="${name}"><br><sub>${name}</sub></td>`;
+              })
+              .join('\n');
 
             const body = [
               `### ${passed ? '✓' : '✕'} CI — ${passed ? 'green' : 'failed'}`,
               '',
               shots.length
-                ? shots.map((s) => `- [${s.replace(/\.png$/, '')}](${base}/${s})`).join('\n')
+                ? `<table><tr>\n${gallery}\n</tr></table>`
                 : '_No screens captured._',
               '',
-              `_Screens render inline under **Files changed** — GitHub cannot embed images from a private repo in a comment._`,
+              `<sub>iPhone 14 viewport · webkit · from \`${sha.slice(0, 7)}\`</sub>`,
             ].join('\n');
 
             const { data: comments } = await github.rest.issues.listComments({
