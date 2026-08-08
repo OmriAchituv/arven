@@ -53,6 +53,35 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
+      # The suite above just produced screenshots from the code as it stands.
+      # Compare the *set* of them with what the pull request carries, so a new
+      # screen that was never committed, or one left behind after a screen was
+      # removed, fails the build.
+      #
+      # Deliberately not a pixel comparison: these are generated on macOS and CI
+      # runs Ubuntu, where font rasterisation differs, so every byte-level check
+      # would fail for reasons that have nothing to do with the change. The real
+      # correctness gate is the suite itself — if the interface is broken, the
+      # tests above have already failed.
+      - name: Check the committed screens are current
+        if: github.event_name == 'pull_request'
+        run: |
+          generated=$(ls test-results/screens/*.png 2>/dev/null | xargs -n1 basename | sort || true)
+          committed=$(ls .github/screens/*.png 2>/dev/null | xargs -n1 basename | sort || true)
+
+          if [ "$generated" = "$committed" ]; then
+            echo "✓ $(echo "$committed" | grep -c . ) screens, matching what this run produced"
+            exit 0
+          fi
+
+          echo "✕ the committed screens do not match what the code produces"
+          echo
+          diff <(echo "$committed") <(echo "$generated") \
+            --label "committed (.github/screens)" --label "produced by this run" -u || true
+          echo
+          echo "Run 'pnpm screens' and commit the result."
+          exit 1
+
       - name: Comment on the pull request
         if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@v7

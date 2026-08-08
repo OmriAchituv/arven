@@ -85,6 +85,9 @@ its structure.
 - **GitHub Issues are the working surface.** Work comes from an issue; `docs/sessions/README.md` is
   the narrative explaining how the work is cut and in what order.
 - One slice, one PR. It merges and deploys, or it isn't done.
+- **Merging is rebase-and-merge, and happens by approving the PR.** A workflow watches for the
+  approval, waits for the checks on that exact commit, and merges only if they are green — branch
+  protection would be the natural mechanism but needs GitHub Pro on a private repo.
 - Don't start a slice whose blockers are still open.
 - Acceptance criteria are binary. "Seeded" means an asserted row count, never a ticked box.
 - **Run `pnpm screens` before pushing a change that alters the interface.** It runs the end-to-end
