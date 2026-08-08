@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/db" },
+    { "path": "./packages/ui" },
+    { "path": "./packages/nutrition" },
+    { "path": "./packages/signals" },
+    { "path": "./packages/identity" },
+    { "path": "./packages/insight" }
+  ]
+}
