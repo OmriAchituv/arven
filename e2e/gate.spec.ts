@@ -27,7 +27,7 @@ test.describe("the gate", () => {
     await page.getByRole("button", { name: "כניסה" }).click();
 
     await expect(page).toHaveURL("/");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("עוד אין כאן כלום.");
+    await expect(page.getByText("קלוריות").first()).toBeVisible();
     await page.screenshot({ path: "test-results/screens/shell.png", fullPage: true });
   });
 
