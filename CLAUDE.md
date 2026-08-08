@@ -87,6 +87,12 @@ its structure.
 - One slice, one PR. It merges and deploys, or it isn't done.
 - Don't start a slice whose blockers are still open.
 - Acceptance criteria are binary. "Seeded" means an asserted row count, never a ticked box.
+- **Run `pnpm screens` before pushing a change that alters the interface.** It runs the end-to-end
+  suite and writes the screenshots into `.github/screens/`, which get committed with the code so
+  they render inline under Files changed. That is the only way to actually see a change on a phone:
+  GitHub's image proxy cannot authenticate against a private repository, so an image has to be in
+  the repository to be viewable, and CI cannot commit it — pushes made with GITHUB_TOKEN do not
+  trigger workflows, so a bot commit would leave the pull request head with no check on it at all.
 - Work is sliced **vertically**. Every slice cuts schema → domain → tRPC → Hebrew UI → tests and ends
   as something openable on a phone. A change that builds one layer with nothing to demo is a planning
   error — that shape is how v2's food data went unseeded and unnoticed.

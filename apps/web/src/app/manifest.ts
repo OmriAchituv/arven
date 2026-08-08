@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "ARVEN",
     short_name: "ARVEN",
-    description: "הבריאות שלך. מובנת.",
+    description: "התמונה המלאה של הבריאות שלך.",
     lang: "he",
     dir: "rtl",
     start_url: "/",
