@@ -56,8 +56,43 @@ its structure.
 
 - `docs/PRD.md` is the source of truth for scope. Code that drifts from it is a bug in one of the two.
 - Do not start a session that isn't sliced out in `docs/sessions/`.
+- One session, one PR. It merges and deploys, or it isn't done.
+- Acceptance criteria are binary. "Seeded" means an asserted row count, never a ticked box.
+
+## Product principles
+
+From `docs/PRD.md` §3. Check any proposal against them.
+
+1. **The model never touches a number.** An LLM may parse text into candidate items and portions.
+   Every gram, calorie and macro comes from a food database or the user.
+2. **Trust comes from provenance, not decimals.** Every value records its origin and confidence.
+   Grounded values render exactly; estimates render as estimates, never disguised as measurements.
+3. **Less input, more inference.** Every required tap must earn itself.
+4. **One pipeline.** Manual, natural language and voice converge on the same resolver. New input
+   methods are adapters, never parallel implementations.
+5. **A domain core that owns the language.** Pure TypeScript, no framework or provider imports,
+   names matching reality, behaviour pinned by tests.
+
+## Domain language
+
+Code is English, the product speaks Hebrew, and no third word for a concept is permitted.
+
+`Food`/מזון · `Portion`/מנת הגשה · `Dish`/מנה · `Entry`/רישום · `Day`/יום · `Provenance`/מקור ·
+`Signal`/סיגנל · `Baseline`/בסיס
+
+**`Meal` and `ארוחה` are banned.** Eating occasions are deliberately not modelled — repetition is
+served by `Dish`. Keeping the word out of the code stops the concept creeping back in.
+
+A `Day` runs 04:00–04:00 Asia/Jerusalem. Totals are always computed, never stored denormalised.
 
 ## Stack
 
-Not chosen yet — decided during the PRD. This section gets filled in with commands (dev, test,
-build, deploy), directory layout and conventions once it is.
+Monorepo, pnpm workspaces. Contexts are sliced by health domain (`nutrition`, `signals`, `identity`,
+`insight`), never by technical layer — a package spanning domains recreates v2's `shared` junk drawer.
+
+Next.js App Router · tRPC · Neon Postgres · Drizzle · Tailwind · Vitest on the domain · Playwright on
+the flows · Vercel · GitHub Actions. All free tier.
+
+Apple Health ingest is a plain REST route, not tRPC — an iOS Shortcut can only POST JSON to a URL.
+
+Commands, directory detail and conventions get filled in as sessions land (see session 10).

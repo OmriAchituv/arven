@@ -6,7 +6,7 @@ A personal health hub. Tell it what you ate, how you slept, what you did — it 
 **Next:** natural-language logging ("two eggs and a slice of rye") resolved to accurate grams and macros.
 **Later:** Apple Health sync for burn, sleep and workouts, so intake and expenditure sit side by side.
 
-Status: pre-alpha. Nothing here yet but the plan.
+Status: pre-alpha. The plan is written; implementation starts at session 00.
 
 ## Repo layout
 
