@@ -76,6 +76,28 @@ export async function logEntry(db: Db, command: LogEntryCommand): Promise<void> 
   await db.insert(entries).values(row);
 }
 
+/**
+ * Replace an entry's portion with a weight — the `○` to `●` upgrade.
+ *
+ * Every column belonging to the other two variants is cleared, so a row can
+ * never carry the remains of a portion it no longer is.
+ */
+export async function weighEntry(db: Db, id: string, grams: number): Promise<void> {
+  await db
+    .update(entries)
+    .set({
+      portionKind: "grams",
+      grams,
+      unitName: null,
+      unitGrams: null,
+      unitCount: null,
+      estimateLabel: null,
+      estimateGrams: null,
+      estimateUncertainty: null,
+    })
+    .where(eq(entries.id, id));
+}
+
 export async function deleteEntry(db: Db, id: string): Promise<void> {
   await db.delete(entries).where(eq(entries.id, id));
 }

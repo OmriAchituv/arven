@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ProvenanceMark } from "~/components/provenance";
+import { approximateLabel, uncertaintyFor } from "@arven/nutrition";
+import { LTR_NUMBER } from "~/lib/format";
 import { api } from "~/lib/trpc";
 
 type Food = Awaited<ReturnType<typeof api.nutrition.search.query>>[number];
@@ -150,12 +152,19 @@ function PortionStep({
   const [unit, setUnit] = useState<Unit | null>(food.units[0] ?? null);
   const [count, setCount] = useState("1");
   const [gramsText, setGramsText] = useState("100");
+  const [roughly, setRoughly] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const usingGrams = unit === null;
   const amount = Number(usingGrams ? gramsText : count);
   const grams = usingGrams ? amount : amount * (unit?.grams ?? 0);
   const valid = Number.isFinite(amount) && amount > 0;
+
+  // A weighed amount is a measurement. A measure may still be a judgement —
+  // "מנה בינונית" is you deciding your portion was medium — and saying "בערך"
+  // makes any of them one.
+  const uncertainty = usingGrams ? null : uncertaintyFor(unit!.name, roughly);
+  const grounded = uncertainty === null;
 
   const kcal = useMemo(
     () => (valid ? Math.round((food.kcalPer100g * grams) / 100) : 0),
@@ -170,12 +179,19 @@ function PortionStep({
         foodId: food.id,
         portion: usingGrams
           ? { kind: "grams", grams: amount }
-          : {
-              kind: "measure",
-              unit: unit!.name,
-              gramsPerUnit: unit!.grams,
-              count: amount,
-            },
+          : grounded
+            ? {
+                kind: "measure",
+                unit: unit!.name,
+                gramsPerUnit: unit!.grams,
+                count: amount,
+              }
+            : {
+                kind: "estimate",
+                label: roughly ? approximateLabel(unit!.name, amount) : unit!.name,
+                assumedGrams: grams,
+                uncertainty,
+              },
       });
       onDone();
     } catch {
@@ -228,6 +244,28 @@ function PortionStep({
         />
       </label>
 
+      {!usingGrams ? (
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.6rem",
+            marginTop: "1.25rem",
+            color: "var(--ink-soft)",
+            fontSize: "var(--step-1)",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={roughly}
+            onChange={(event) => setRoughly(event.target.checked)}
+            data-testid="roughly"
+            style={{ accentColor: "var(--accent)", width: "1.1rem", height: "1.1rem" }}
+          />
+          בערך, לא נמדד
+        </label>
+      ) : null}
+
       <div
         style={{
           display: "flex",
@@ -237,18 +275,21 @@ function PortionStep({
         }}
         data-testid="preview"
       >
-        <ProvenanceMark grounded />
+        <ProvenanceMark grounded={grounded} />
         <span
           style={{
+            ...LTR_NUMBER,
             fontFamily: "var(--font-wordmark), serif",
             fontSize: "2.25rem",
             lineHeight: 1,
           }}
         >
+          {grounded ? "" : "~"}
           {kcal.toLocaleString("en-US")}
         </span>
         <span style={{ color: "var(--ink-soft)" }}>
-          קלוריות · {Math.round(grams).toLocaleString("en-US")} ג׳
+          קלוריות · {grounded ? "" : "בערך "}
+          {Math.round(grams).toLocaleString("en-US")} ג׳
         </span>
       </div>
 

@@ -6,7 +6,7 @@ import { searchTerms } from "../domain/hebrew";
 import type { LoggedDay } from "../domain/logged-day";
 import { assembleDay } from "../domain/logged-day";
 import type { Portion } from "../domain/portion";
-import { entriesForDay, logEntry } from "../infra/entries";
+import { entriesForDay, logEntry, weighEntry } from "../infra/entries";
 import type { FoodSearchResult } from "../infra/foods";
 import { searchFoods } from "../infra/foods";
 
@@ -47,4 +47,15 @@ export interface RecordEating {
 export async function recordEating(db: Db, command: RecordEating): Promise<DayKey> {
   await logEntry(db, command);
   return dayKeyOf(command.eatenAt);
+}
+
+/**
+ * Turn an estimate into a measurement.
+ *
+ * Offered wherever an estimate is shown and never demanded — brief §21, honesty
+ * has to feel rewarded, or the log stops reflecting what was actually eaten.
+ */
+export async function weighIt(db: Db, entryId: string, grams: number): Promise<void> {
+  if (grams <= 0) throw new RangeError(`a portion must weigh something, got ${grams}`);
+  await weighEntry(db, entryId, grams);
 }

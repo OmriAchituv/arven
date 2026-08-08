@@ -3,8 +3,9 @@ import Link from "next/link";
 import { dayKeyOf, dayOfEating, isGrounded } from "@arven/nutrition";
 
 import { ProvenanceMark } from "~/components/provenance";
+import { WeighButton } from "~/components/weigh";
 import { Wordmark } from "~/components/wordmark";
-import { kcal, longDate, macro, time } from "~/lib/format";
+import { LTR_NUMBER, kcal, longDate, macro, time } from "~/lib/format";
 import { db } from "~/server/db";
 
 // The day is read per request; there is nothing here to cache.
@@ -61,7 +62,7 @@ export default async function TodayPage() {
             claim than "1,740".
           */}
           {day.band > 0 ? (
-            <span style={{ color: "var(--ink-faint)", fontSize: "var(--step0)" }}>
+            <span style={{ ...LTR_NUMBER, color: "var(--ink-faint)", fontSize: "var(--step0)" }}>
               ± {kcal(day.band)}
             </span>
           ) : null}
@@ -100,49 +101,73 @@ export default async function TodayPage() {
           </section>
 
           <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-            {day.entries.map((entry) => (
-              <li
-                key={entry.id}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "auto 1fr auto auto",
-                  alignItems: "baseline",
-                  gap: "0.75rem",
-                  padding: "0.7rem 0",
-                  borderBottom: "1px solid var(--hairline, var(--edge))",
-                }}
-              >
-                <span style={{ fontSize: "12.5px", color: "var(--ink-faint)" }}>
-                  {time(entry.eatenAt)}
-                </span>
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.45rem",
-                    minWidth: 0,
-                  }}
-                >
-                  <ProvenanceMark grounded={isGrounded(entry.nourishment.provenance)} />
+            {day.entries.map((entry) => {
+              const grounded = isGrounded(entry.nourishment.provenance);
+
+              const row = (
+                <>
+                  <span style={{ fontSize: "12.5px", color: "var(--ink-faint)" }}>
+                    {time(entry.eatenAt)}
+                  </span>
                   <span
                     style={{
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.45rem",
+                      minWidth: 0,
                     }}
                   >
-                    {entry.foodName}
+                    <ProvenanceMark grounded={grounded} />
+                    <span
+                      style={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {entry.foodName}
+                    </span>
                   </span>
-                </span>
-                <span style={{ fontSize: "13px", color: "var(--ink-faint)" }}>
-                  {entry.nourishment.portionLabel}
-                </span>
-                <span style={{ fontSize: "14.5px", minWidth: "3.2rem", textAlign: "left" }}>
-                  {isGrounded(entry.nourishment.provenance) ? "" : "~"}
-                  {kcal(entry.nourishment.nutrients.kcal)}
-                </span>
-              </li>
-            ))}
+                  <span style={{ fontSize: "13px", color: "var(--ink-faint)" }}>
+                    {entry.nourishment.portionLabel}
+                  </span>
+                  <span
+                    style={{ ...LTR_NUMBER, fontSize: "14.5px", minWidth: "3.2rem", textAlign: "left" }}
+                  >
+                    {grounded ? "" : "~"}
+                    {kcal(entry.nourishment.nutrients.kcal)}
+                  </span>
+                </>
+              );
+
+              return (
+                <li
+                  key={entry.id}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "auto 1fr auto auto",
+                    alignItems: "baseline",
+                    gap: "0.75rem",
+                    padding: "0.7rem 0",
+                    borderBottom: "1px solid var(--edge)",
+                  }}
+                >
+                  {grounded ? (
+                    row
+                  ) : (
+                    // Only an estimate is tappable. There is nothing to correct
+                    // about a weight that was already measured.
+                    <WeighButton
+                      entryId={entry.id}
+                      name={entry.foodName}
+                      assumedGrams={entry.nourishment.grams}
+                    >
+                      {row}
+                    </WeighButton>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </>
       ) : (

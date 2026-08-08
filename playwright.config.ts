@@ -8,10 +8,12 @@ export default defineConfig({
   // The suite logs real food into the real database; this puts it back.
   globalSetup: "./e2e/support/global-setup.ts",
   globalTeardown: "./e2e/support/global-teardown.ts",
-  fullyParallel: true,
+  // The suite shares one database and one day, so tests reset it and run in
+  // order rather than racing each other for it.
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   reporter: process.env.CI ? [["html"], ["github"]] : [["list"]],
   outputDir: "./test-results",
 
