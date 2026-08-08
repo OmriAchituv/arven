@@ -54,6 +54,13 @@ export const foods = pgTable(
     name: text("name").notNull(),
     nameEn: text("name_en"),
 
+    /**
+     * `name` reduced to the form queries are compared against — no geresh, no
+     * final letter forms, no niqqud. Written at import time by the same
+     * function the query goes through, so the two always meet in one shape.
+     */
+    searchName: text("search_name").notNull(),
+
     kcalPer100g: doublePrecision("kcal_per_100g").notNull(),
     proteinPer100g: doublePrecision("protein_per_100g").notNull(),
     carbsPer100g: doublePrecision("carbs_per_100g").notNull(),
@@ -67,7 +74,7 @@ export const foods = pgTable(
   },
   (table) => [
     uniqueIndex("foods_source_source_id_idx").on(table.source, table.sourceId),
-    index("foods_name_idx").on(table.name),
+    index("foods_search_name_idx").on(table.searchName),
   ],
 );
 
