@@ -11,3 +11,5 @@ export * from "./domain/provenance";
 export * from "./domain/portion";
 export * from "./domain/nutrients";
 export * from "./domain/day";
+export * from "./domain/hebrew";
+export * from "./infra/foods";

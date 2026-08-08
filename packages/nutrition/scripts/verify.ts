@@ -9,7 +9,7 @@
  */
 import { sql } from "drizzle-orm";
 
-import { createDb, foods, portionUnits } from "../src/index";
+import { createDb, foods, portionUnits } from "@arven/db";
 
 const EXPECTED = {
   mohFoods: 4_000,
@@ -39,6 +39,17 @@ async function main() {
     console.log(`  ${source.padEnd(10)} ${(counts[source] ?? 0).toLocaleString()}`);
   }
   console.log(`\nportion units  ${units.toLocaleString()}`);
+
+  // A food with no search name cannot be found, which makes it no better than
+  // absent. The column carries a default so the migration could run over
+  // existing rows; the import fills it in properly.
+  const [unsearchable] = (
+    await db.execute<{ n: number }>(sql`
+      select count(*)::int as n from foods where search_name = '' or search_name is null
+    `)
+  ).rows;
+  const empty = unsearchable?.n ?? 0;
+  console.log(`unsearchable   ${empty.toLocaleString()}`);
 
   // How much of the table can actually answer "one of those, please".
   const [coverage] = (
@@ -89,6 +100,11 @@ async function main() {
     // Catches both a broken join and mojibake: these are real Hebrew names that
     // are known to carry household measures.
     failures.push("no Hebrew food with household measures matched — check encoding and the join");
+  }
+  if (empty > 0) {
+    // The column is added with a default so the migration can run over existing
+    // rows; the import fills it. A row left empty is a food nobody can find.
+    failures.push(`${empty} foods have no search name — re-run the import`);
   }
   if (withUnits < moh / 2) {
     failures.push(`only ${withUnits} of ${moh} foods carry a household measure`);

@@ -78,7 +78,18 @@ importers:
 
   packages/insight: {}
 
-  packages/nutrition: {}
+  packages/nutrition:
+    dependencies:
+      '@arven/db':
+        specifier: workspace:*
+        version: link:../db
+      drizzle-orm:
+        specifier: ^0.38.2
+        version: 0.38.4(@neondatabase/serverless@0.10.4)(@types/pg@8.11.6)(@types/react@19.2.18)(react@19.2.8)
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.11
 
   packages/signals: {}
 
