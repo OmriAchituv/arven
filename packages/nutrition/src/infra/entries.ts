@@ -1,11 +1,12 @@
 import { and, asc, eq, gte, lt } from "drizzle-orm";
 
 import type { Db, Entry, NewEntry } from "@arven/db";
-import { entries, foods } from "@arven/db";
+import { dishes, entries, foods } from "@arven/db";
 
 import type { DayKey } from "../domain/day";
 import { endOf, startOf } from "../domain/day";
 import type { EntryInput } from "../domain/logged-day";
+import { loadDishes } from "./dishes";
 import type { Portion } from "../domain/portion";
 
 /**
@@ -38,8 +39,6 @@ function portionToColumns(portion: Portion) {
 
 function portionFromColumns(row: Entry): Portion {
   switch (row.portionKind) {
-    case "grams":
-      return { kind: "grams", grams: row.grams ?? 0 };
     case "measure":
       return {
         kind: "measure",
@@ -56,23 +55,34 @@ function portionFromColumns(row: Entry): Portion {
           ? {}
           : { uncertainty: row.estimateUncertainty }),
       };
+    // `grams`, and the null a dish entry carries — neither reaches here with a
+    // portion to read, so grams is the safe reading.
+    default:
+      return { kind: "grams", grams: row.grams ?? 0 };
   }
 }
 
-export interface LogEntryCommand {
-  id: string;
-  foodId: string;
-  portion: Portion;
-  eatenAt: Date;
-}
+export type LogEntryCommand = { id: string; eatenAt: Date } & (
+  | { kind: "food"; foodId: string; portion: Portion }
+  | { kind: "dish"; dishId: string; scale: number }
+);
 
 export async function logEntry(db: Db, command: LogEntryCommand): Promise<void> {
-  const row: NewEntry = {
-    id: command.id,
-    foodId: command.foodId,
-    eatenAt: command.eatenAt,
-    ...portionToColumns(command.portion),
-  };
+  const row: NewEntry =
+    command.kind === "dish"
+      ? {
+          id: command.id,
+          dishId: command.dishId,
+          dishScale: command.scale,
+          eatenAt: command.eatenAt,
+        }
+      : {
+          id: command.id,
+          foodId: command.foodId,
+          eatenAt: command.eatenAt,
+          ...portionToColumns(command.portion),
+        };
+
   await db.insert(entries).values(row);
 }
 
@@ -111,26 +121,47 @@ export async function deleteEntry(db: Db, id: string): Promise<void> {
  * eventually disagree — usually on a daylight-saving weekend.
  */
 export async function entriesForDay(db: Db, day: DayKey): Promise<EntryInput[]> {
+  // Left join, because an entry is a food or a dish and only one side is ever
+  // present. An inner join would silently drop every dish from the day.
   const rows = await db
     .select({ entry: entries, food: foods })
     .from(entries)
-    .innerJoin(foods, eq(entries.foodId, foods.id))
+    .leftJoin(foods, eq(entries.foodId, foods.id))
     .where(and(gte(entries.eatenAt, startOf(day)), lt(entries.eatenAt, endOf(day))))
     .orderBy(asc(entries.eatenAt));
 
-  return rows.map(({ entry, food }) => ({
-    id: entry.id,
-    foodId: food.id,
-    foodName: food.name,
-    food: {
-      per100g: {
-        kcal: food.kcalPer100g,
-        protein: food.proteinPer100g,
-        carbs: food.carbsPer100g,
-        fat: food.fatPer100g,
+  const dishIds = rows.map(({ entry }) => entry.dishId).filter((id): id is string => !!id);
+  const loaded = dishIds.length > 0 ? await loadDishes(db, dishIds) : [];
+  const byId = new Map(loaded.map((dish) => [dish.id, dish]));
+
+  return rows.flatMap(({ entry, food }): EntryInput[] => {
+    if (entry.dishId) {
+      const dish = byId.get(entry.dishId);
+      // A dish deleted out from under an entry would otherwise crash the day.
+      return dish
+        ? [{ id: entry.id, eatenAt: entry.eatenAt, kind: "dish", dish, scale: entry.dishScale ?? 1 }]
+        : [];
+    }
+
+    if (!food) return [];
+
+    return [
+      {
+        id: entry.id,
+        eatenAt: entry.eatenAt,
+        kind: "food",
+        foodId: food.id,
+        foodName: food.name,
+        food: {
+          per100g: {
+            kcal: food.kcalPer100g,
+            protein: food.proteinPer100g,
+            carbs: food.carbsPer100g,
+            fat: food.fatPer100g,
+          },
+        },
+        portion: portionFromColumns(entry),
       },
-    },
-    portion: portionFromColumns(entry),
-    eatenAt: entry.eatenAt,
-  }));
+    ];
+  });
 }
