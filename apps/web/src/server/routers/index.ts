@@ -1,4 +1,5 @@
 import { router } from "../trpc";
+import { nutritionRouter } from "./nutrition";
 import { systemRouter } from "./system";
 
 /**
@@ -7,6 +8,7 @@ import { systemRouter } from "./system";
  */
 export const appRouter = router({
   system: systemRouter,
+  nutrition: nutritionRouter,
 });
 
 export type AppRouter = typeof appRouter;

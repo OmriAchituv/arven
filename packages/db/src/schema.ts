@@ -114,3 +114,52 @@ export const portionUnits = pgTable(
 
 export type PortionUnit = typeof portionUnits.$inferSelect;
 export type NewPortionUnit = typeof portionUnits.$inferInsert;
+
+/**
+ * An Entry — רישום. One act of eating, at a time.
+ *
+ * The columns mirror the domain's `Portion` union exactly, one group per
+ * variant, rather than overloading a single `amount`. Verbose on purpose: a
+ * shape that maps one-to-one onto the type it stores cannot drift away from it
+ * quietly.
+ *
+ * Note what is absent: no calories, no macros, no day. All three are derived —
+ * from the food's per-100g values, the portion, and the eaten-at instant. v2
+ * stored running totals on a day row and had to keep them in step by hand.
+ */
+export const entries = pgTable(
+  "entries",
+  {
+    id: text("id").primaryKey(),
+    foodId: text("food_id")
+      .notNull()
+      .references(() => foods.id),
+
+    eatenAt: timestamp("eaten_at", { withTimezone: true }).notNull(),
+
+    /** 'grams' | 'measure' | 'estimate' — the domain's Portion variants. */
+    portionKind: text("portion_kind").$type<PortionKind>().notNull(),
+
+    /** kind = 'grams' */
+    grams: doublePrecision("grams"),
+
+    /** kind = 'measure' — a household measure the database supplied. */
+    unitName: text("unit_name"),
+    unitGrams: doublePrecision("unit_grams"),
+    unitCount: doublePrecision("unit_count"),
+
+    /** kind = 'estimate' — a quantity nobody measured. */
+    estimateLabel: text("estimate_label"),
+    estimateGrams: doublePrecision("estimate_grams"),
+    estimateUncertainty: doublePrecision("estimate_uncertainty"),
+
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("entries_eaten_at_idx").on(table.eatenAt)],
+);
+
+export const PORTION_KINDS = ["grams", "measure", "estimate"] as const;
+export type PortionKind = (typeof PORTION_KINDS)[number];
+
+export type Entry = typeof entries.$inferSelect;
+export type NewEntry = typeof entries.$inferInsert;
