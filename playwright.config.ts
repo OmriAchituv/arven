@@ -29,8 +29,12 @@ export default defineConfig({
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
         env: {
-          ARVEN_PASSPHRASE: "test-passphrase",
-          ARVEN_SESSION_SECRET: "test-session-secret",
+          // Inherit whatever the shell has, so the server and the specs always
+          // agree on the passphrase. Hardcoding it here means a developer with
+          // a real .env.local loaded fails every login test for no reason.
+          ARVEN_PASSPHRASE: process.env.ARVEN_PASSPHRASE ?? "test-passphrase",
+          ARVEN_SESSION_SECRET:
+            process.env.ARVEN_SESSION_SECRET ?? "test-session-secret",
           DATABASE_URL: process.env.DATABASE_URL ?? "",
         },
       },
