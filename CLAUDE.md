@@ -55,9 +55,14 @@ its structure.
 ## Working agreements
 
 - `docs/PRD.md` is the source of truth for scope. Code that drifts from it is a bug in one of the two.
-- Do not start a session that isn't sliced out in `docs/sessions/`.
-- One session, one PR. It merges and deploys, or it isn't done.
+- **GitHub Issues are the working surface.** Work comes from an issue; `docs/sessions/README.md` is
+  the narrative explaining how the work is cut and in what order.
+- One slice, one PR. It merges and deploys, or it isn't done.
+- Don't start a slice whose blockers are still open.
 - Acceptance criteria are binary. "Seeded" means an asserted row count, never a ticked box.
+- Work is sliced **vertically**. Every slice cuts schema → domain → tRPC → Hebrew UI → tests and ends
+  as something openable on a phone. A change that builds one layer with nothing to demo is a planning
+  error — that shape is how v2's food data went unseeded and unnoticed.
 
 ## Product principles
 
