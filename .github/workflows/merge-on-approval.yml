@@ -1,0 +1,80 @@
+name: Merge on approval
+
+# Branch protection would be the natural way to say "CI must pass before this
+# can merge", but it needs GitHub Pro on a private repository. This does the
+# same job for nothing: approving a pull request merges it, and only if the
+# checks on that exact commit came back green.
+#
+# Nothing here can deploy a red build — the merge simply does not happen, and
+# the run says why.
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+jobs:
+  merge:
+    if: github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Wait for the checks on this commit
+        id: checks
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          echo "Waiting on checks for ${SHA::7}…"
+
+          for attempt in $(seq 1 60); do
+            runs=$(gh api "repos/$REPO/commits/$SHA/check-runs" \
+              --jq '[.check_runs[] | select(.name == "typecheck · unit · e2e")]')
+            total=$(echo "$runs" | jq 'length')
+
+            if [ "$total" -eq 0 ]; then
+              echo "  no CI run yet…"
+            else
+              pending=$(echo "$runs" | jq '[.[] | select(.status != "completed")] | length')
+              failed=$(echo "$runs" | jq '[.[] | select(.conclusion != "success")] | length')
+
+              if [ "$pending" -eq 0 ]; then
+                if [ "$failed" -eq 0 ]; then
+                  echo "green=true" >> "$GITHUB_OUTPUT"
+                  echo "CI is green."
+                  exit 0
+                fi
+                echo "green=false" >> "$GITHUB_OUTPUT"
+                echo "$runs" | jq -r '.[] | "  \(.name): \(.conclusion)"'
+                exit 0
+              fi
+              echo "  still running…"
+            fi
+            sleep 15
+          done
+
+          echo "green=false" >> "$GITHUB_OUTPUT"
+          echo "Timed out waiting for CI."
+
+      - name: Say why it is not merging
+        if: steps.checks.outputs.green != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}" \
+            --body "Approved, but not merging — the checks on \`${{ github.event.pull_request.head.sha }}\` are not green. Fix them and approve again."
+          exit 1
+
+      - name: Rebase and merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" --rebase --delete-branch
+          echo "Merged. Vercel takes it from here."
