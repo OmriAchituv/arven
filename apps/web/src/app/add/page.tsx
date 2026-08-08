@@ -1,7 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 
 import { ProvenanceMark } from "~/components/provenance";
 import { approximateLabel, uncertaintyFor } from "@arven/nutrition";
@@ -26,7 +27,7 @@ const SOURCE_LABEL: Record<string, string> = {
  * became a round trip. Nothing here calls a model; the measures come from a
  * lookup table.
  */
-export default function AddPage() {
+function Add() {
   const router = useRouter();
   const [chosen, setChosen] = useState<Food | null>(null);
 
@@ -37,6 +38,15 @@ export default function AddPage() {
   );
 }
 
+export default function AddPage() {
+  // useSearchParams needs a boundary, or the route cannot be prerendered.
+  return (
+    <Suspense>
+      <Add />
+    </Suspense>
+  );
+}
+
 function SearchStep({
   onPick,
   onCancel,
@@ -44,7 +54,8 @@ function SearchStep({
   onPick: (food: Food) => void;
   onCancel: () => void;
 }) {
-  const [query, setQuery] = useState("");
+  const params = useSearchParams();
+  const [query, setQuery] = useState(params.get("q") ?? "");
   const [results, setResults] = useState<Food[]>([]);
   const [searching, setSearching] = useState(false);
   const input = useRef<HTMLInputElement>(null);
@@ -132,8 +143,30 @@ function SearchStep({
       </ul>
 
       {query.trim().length >= 2 && !searching && results.length === 0 ? (
-        <p style={{ color: "var(--ink-soft)", marginTop: "1.5rem" }}>לא נמצא מזון בשם הזה.</p>
+        <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          <p style={{ color: "var(--ink-soft)", margin: 0 }}>לא נמצא מזון בשם הזה.</p>
+          {/*
+            The Ministry's set has real gaps — סביח and פרגית return nothing at
+            all — so the moment a search fails is the moment to offer entering
+            it from the packet. The name carries across.
+          */}
+          <Link
+            href={`/foods/new?name=${encodeURIComponent(query.trim())}`}
+            data-testid="create-food"
+            style={{ color: "var(--accent)" }}
+          >
+            הוספת {query.trim()} כמזון משלך
+          </Link>
+        </div>
       ) : null}
+
+      <Link
+        href="/foods"
+        data-testid="my-foods-link"
+        style={{ marginTop: "auto", color: "var(--ink-faint)", fontSize: "var(--step-1)" }}
+      >
+        המזונות שלי
+      </Link>
     </main>
   );
 }

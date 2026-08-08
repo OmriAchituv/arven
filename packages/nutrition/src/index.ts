@@ -17,3 +17,4 @@ export * from "./domain/logged-day";
 export * from "./app/index";
 export * from "./infra/entries";
 export * from "./domain/measures";
+export * from "./infra/personal-foods";
