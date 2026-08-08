@@ -7,7 +7,7 @@
  * rule about food can be stated without mentioning a database, it belongs here,
  * and it is tested without one.
  */
-export * from "./domain/provenance.ts";
-export * from "./domain/portion.ts";
-export * from "./domain/nutrients.ts";
-export * from "./domain/day.ts";
+export * from "./domain/provenance";
+export * from "./domain/portion";
+export * from "./domain/nutrients";
+export * from "./domain/day";

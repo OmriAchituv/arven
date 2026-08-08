@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { nourishmentOf, sum, times } from "./nutrients.ts";
-import type { FoodValues } from "./nutrients.ts";
-import { resolvePortion, weigh } from "./portion.ts";
-import { combine, estimated, isEstimated, isGrounded, measure, weighed } from "./provenance.ts";
+import { nourishmentOf, sum, times } from "./nutrients";
+import type { FoodValues } from "./nutrients";
+import { resolvePortion, weigh } from "./portion";
+import { combine, estimated, isEstimated, isGrounded, measure, weighed } from "./provenance";
 
 /** גבינת קוטג' 5% שומן, תנובה — real values from the Ministry of Health data. */
 const cottage: FoodValues = {

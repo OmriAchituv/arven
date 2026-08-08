@@ -1,5 +1,5 @@
-import type { Provenance } from "./provenance.ts";
-import { estimated, measure, weighed } from "./provenance.ts";
+import type { Provenance } from "./provenance";
+import { estimated, measure, weighed } from "./provenance";
 
 /**
  * Portion — מנת הגשה. How much of a Food, and how we know.
