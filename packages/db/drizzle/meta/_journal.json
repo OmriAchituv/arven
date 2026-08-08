@@ -15,6 +15,13 @@
       "when": 1786196289245,
       "tag": "0001_seed_schema_version",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786209354460,
+      "tag": "0002_deep_black_panther",
+      "breakpoints": true
     }
   ]
 }
