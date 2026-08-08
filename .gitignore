@@ -17,3 +17,7 @@ test-results/
 test-results/
 playwright-report/
 blob-report/
+
+# TypeScript build output
+*.tsbuildinfo
+dist/
