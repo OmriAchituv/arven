@@ -12,13 +12,16 @@
   "scripts": {
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
-    "studio": "drizzle-kit studio"
+    "studio": "drizzle-kit studio",
+    "import:moh": "tsx scripts/import-moh.ts",
+    "verify": "tsx scripts/verify.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
     "drizzle-orm": "^0.38.2"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.30.1"
+    "drizzle-kit": "^0.30.1",
+    "tsx": "^4.19.2"
   }
 }
