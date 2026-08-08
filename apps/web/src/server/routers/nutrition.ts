@@ -2,6 +2,10 @@ import { z } from "zod";
 
 import {
   addMyFood,
+  buildDish,
+  changeDish,
+  dishesOfMine,
+  dropDish,
   dayOfEating,
   editMyFood,
   findFood,
@@ -53,6 +57,15 @@ const foodDraft = z.object({
     .default([]),
 });
 
+/** A dish is a name and what is in it. Never a total. */
+const dishDraft = z.object({
+  name: z.string().trim().min(1, "a dish needs a name"),
+  components: z
+    .array(z.object({ foodId: z.string().min(1), portion }))
+    .min(1, "a dish needs something in it")
+    .max(40),
+});
+
 export const nutritionRouter = router({
   search: publicProcedure
     .input(z.object({ query: z.string(), limit: z.number().min(1).max(50).optional() }))
@@ -73,8 +86,41 @@ export const nutritionRouter = router({
     .mutation(({ input }) =>
       recordEating(db(), {
         id: crypto.randomUUID(),
+        kind: "food",
         foodId: input.foodId,
         portion: input.portion,
+        eatenAt: input.eatenAt ?? new Date(),
+      }),
+    ),
+
+  dishes: publicProcedure.query(() => dishesOfMine(db())),
+
+  createDish: publicProcedure
+    .input(dishDraft)
+    .mutation(({ input }) => buildDish(db(), crypto.randomUUID(), input)),
+
+  updateDish: publicProcedure
+    .input(z.object({ dishId: z.string().min(1), draft: dishDraft }))
+    .mutation(({ input }) => changeDish(db(), input.dishId, input.draft)),
+
+  deleteDish: publicProcedure
+    .input(z.object({ dishId: z.string().min(1) }))
+    .mutation(({ input }) => dropDish(db(), input.dishId)),
+
+  logDish: publicProcedure
+    .input(
+      z.object({
+        dishId: z.string().min(1),
+        scale: z.number().positive().max(20).default(1),
+        eatenAt: z.coerce.date().optional(),
+      }),
+    )
+    .mutation(({ input }) =>
+      recordEating(db(), {
+        id: crypto.randomUUID(),
+        kind: "dish",
+        dishId: input.dishId,
+        scale: input.scale,
         eatenAt: input.eatenAt ?? new Date(),
       }),
     ),

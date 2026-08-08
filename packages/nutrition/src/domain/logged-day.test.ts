@@ -15,6 +15,7 @@ function at(hhmm: string): Date {
 
 const weighedCottage: EntryInput = {
   id: "1",
+  kind: "food" as const,
   foodId: "moh:495",
   foodName: "גבינת קוטג' 5% שומן, תנובה",
   food: cottage,
@@ -24,6 +25,7 @@ const weighedCottage: EntryInput = {
 
 const onePita: EntryInput = {
   id: "2",
+  kind: "food" as const,
   foodId: "moh:100",
   foodName: "פיתה",
   food: pita,
@@ -33,6 +35,7 @@ const onePita: EntryInput = {
 
 const handfulOfAlmonds: EntryInput = {
   id: "3",
+  kind: "food" as const,
   foodId: "moh:700",
   foodName: "שקדים",
   food: almonds,

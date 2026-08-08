@@ -1,4 +1,6 @@
 import type { DayKey } from "./day";
+import type { DishDefinition } from "./dish";
+import { nourishmentOfDish } from "./dish";
 import type { FoodValues, Nourishment, Nutrients } from "./nutrients";
 import { nourishmentOf, sum } from "./nutrients";
 import type { Portion } from "./portion";
@@ -14,6 +16,12 @@ export interface LoggedEntry {
   foodName: string;
   eatenAt: Date;
   nourishment: Nourishment;
+  /**
+   * The portion, carried through so a day can be turned into a Dish without
+   * asking the database again. Absent on a dish entry — nesting a dish inside
+   * another is deliberately not supported.
+   */
+  portion?: Portion;
 }
 
 export interface LoggedDay {
@@ -30,14 +38,19 @@ export interface LoggedDay {
   band: number;
 }
 
-export interface EntryInput {
+/**
+ * An entry is either a food at a portion, or a dish eaten at some scale.
+ *
+ * Modelled as a union rather than as optional fields, so a row that is neither
+ * — or somehow both — cannot be constructed.
+ */
+export type EntryInput = {
   id: string;
-  foodId: string;
-  foodName: string;
-  food: FoodValues;
-  portion: Portion;
   eatenAt: Date;
-}
+} & (
+  | { kind: "food"; foodId: string; foodName: string; food: FoodValues; portion: Portion }
+  | { kind: "dish"; dish: DishDefinition; scale: number }
+);
 
 /**
  * Assemble a day from what was eaten.
@@ -49,13 +62,24 @@ export interface EntryInput {
  */
 export function assembleDay(day: DayKey, inputs: ReadonlyArray<EntryInput>): LoggedDay {
   const entries: LoggedEntry[] = inputs
-    .map((input) => ({
-      id: input.id,
-      foodId: input.foodId,
-      foodName: input.foodName,
-      eatenAt: input.eatenAt,
-      nourishment: nourishmentOf(input.food, input.portion),
-    }))
+    .map((input) =>
+      input.kind === "dish"
+        ? {
+            id: input.id,
+            foodId: input.dish.id,
+            foodName: input.dish.name,
+            eatenAt: input.eatenAt,
+            nourishment: nourishmentOfDish(input.dish, input.scale),
+          }
+        : {
+            id: input.id,
+            foodId: input.foodId,
+            foodName: input.foodName,
+            eatenAt: input.eatenAt,
+            nourishment: nourishmentOf(input.food, input.portion),
+            portion: input.portion,
+          },
+    )
     .sort((a, b) => a.eatenAt.getTime() - b.eatenAt.getTime());
 
   const total = sum(entries.map((entry) => entry.nourishment.nutrients));

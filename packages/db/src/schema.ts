@@ -131,14 +131,19 @@ export const entries = pgTable(
   "entries",
   {
     id: text("id").primaryKey(),
-    foodId: text("food_id")
-      .notNull()
-      .references(() => foods.id),
+
+    /** Set when this entry is a food at a portion. */
+    foodId: text("food_id").references(() => foods.id),
+
+    /** Set instead when it is a Dish, logged whole. */
+    dishId: text("dish_id").references(() => dishes.id),
+    /** 1 for a full dish, 0.5 for half of one. */
+    dishScale: doublePrecision("dish_scale"),
 
     eatenAt: timestamp("eaten_at", { withTimezone: true }).notNull(),
 
-    /** 'grams' | 'measure' | 'estimate' — the domain's Portion variants. */
-    portionKind: text("portion_kind").$type<PortionKind>().notNull(),
+    /** 'grams' | 'measure' | 'estimate' — the domain's Portion variants. Null for a dish. */
+    portionKind: text("portion_kind").$type<PortionKind>(),
 
     /** kind = 'grams' */
     grams: doublePrecision("grams"),
@@ -163,3 +168,55 @@ export type PortionKind = (typeof PORTION_KINDS)[number];
 
 export type Entry = typeof entries.$inferSelect;
 export type NewEntry = typeof entries.$inferInsert;
+
+/**
+ * A Dish — מנה. Your saved composition: "שייק אחרי אימון", "הסלט שלי".
+ *
+ * It stores what it is made of, never what it totalled. Totals are computed on
+ * every use, which is what keeps scaling exact, makes swapping an ingredient an
+ * edit rather than a re-entry, and carries provenance into history instead of
+ * freezing it into a figure whose origin is unrecoverable.
+ */
+export const dishes = pgTable("dishes", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type Dish = typeof dishes.$inferSelect;
+export type NewDish = typeof dishes.$inferInsert;
+
+/**
+ * One food, at one portion, inside a Dish.
+ *
+ * The portion columns mirror the domain's union exactly, the same way Entry
+ * does — a component is a portion of a food, and there is no reason for the two
+ * to be shaped differently.
+ */
+export const dishComponents = pgTable(
+  "dish_components",
+  {
+    id: text("id").primaryKey(),
+    dishId: text("dish_id")
+      .notNull()
+      .references(() => dishes.id, { onDelete: "cascade" }),
+    foodId: text("food_id")
+      .notNull()
+      .references(() => foods.id),
+
+    portionKind: text("portion_kind").$type<PortionKind>().notNull(),
+    grams: doublePrecision("grams"),
+    unitName: text("unit_name"),
+    unitGrams: doublePrecision("unit_grams"),
+    unitCount: doublePrecision("unit_count"),
+    estimateLabel: text("estimate_label"),
+    estimateGrams: doublePrecision("estimate_grams"),
+    estimateUncertainty: doublePrecision("estimate_uncertainty"),
+
+    rank: integer("rank").notNull().default(0),
+  },
+  (table) => [index("dish_components_dish_idx").on(table.dishId)],
+);
+
+export type DishComponent = typeof dishComponents.$inferSelect;
+export type NewDishComponent = typeof dishComponents.$inferInsert;

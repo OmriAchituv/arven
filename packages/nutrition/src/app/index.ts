@@ -8,6 +8,9 @@ import { assembleDay } from "../domain/logged-day";
 import type { Portion } from "../domain/portion";
 import { entriesForDay, logEntry, weighEntry } from "../infra/entries";
 import type { FoodSearchResult } from "../infra/foods";
+import { nourishmentOfDish } from "../domain/dish";
+import type { DishDraft } from "../infra/dishes";
+import { createDish, deleteDish, loadDishes, updateDish } from "../infra/dishes";
 import { searchFoods } from "../infra/foods";
 import type { PersonalFoodDraft } from "../infra/personal-foods";
 import {
@@ -39,12 +42,10 @@ export async function dayOfEating(db: Db, day: DayKey): Promise<LoggedDay> {
   return assembleDay(day, await entriesForDay(db, day));
 }
 
-export interface RecordEating {
-  id: string;
-  foodId: string;
-  portion: Portion;
-  eatenAt: Date;
-}
+export type RecordEating = { id: string; eatenAt: Date } & (
+  | { kind: "food"; foodId: string; portion: Portion }
+  | { kind: "dish"; dishId: string; scale: number }
+);
 
 /**
  * Record something eaten, and return the day it landed on.
@@ -122,4 +123,30 @@ function assertUsable(draft: PersonalFoodDraft): void {
       throw new RangeError(`${label} per 100 g must be zero or more, got ${value}`);
     }
   }
+}
+
+/**
+ * Dishes — repetition without repetition.
+ *
+ * Most days repeat most foods. A Dish is how that stops being retyping, and it
+ * is why eating occasions are not modelled at all: what recurs is the
+ * composition, not the hour it was eaten at.
+ */
+export async function buildDish(db: Db, id: string, draft: DishDraft): Promise<string> {
+  return createDish(db, id, draft);
+}
+
+export async function changeDish(db: Db, dishId: string, draft: DishDraft): Promise<void> {
+  await updateDish(db, dishId, draft);
+}
+
+export async function dropDish(db: Db, dishId: string): Promise<void> {
+  await deleteDish(db, dishId);
+}
+
+export async function dishesOfMine(db: Db) {
+  const all = await loadDishes(db);
+  // Sent with their computed totals, so a list can show what each one comes to
+  // without the interface doing arithmetic of its own.
+  return all.map((dish) => ({ ...dish, nourishment: nourishmentOfDish(dish) }));
 }

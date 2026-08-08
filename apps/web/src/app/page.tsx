@@ -3,6 +3,8 @@ import Link from "next/link";
 import { dayKeyOf, dayOfEating, isGrounded } from "@arven/nutrition";
 
 import { ProvenanceMark } from "~/components/provenance";
+import { SaveAsDish } from "~/components/save-as-dish";
+import type { SavableEntry } from "~/components/save-as-dish";
 import { WeighButton } from "~/components/weigh";
 import { Wordmark } from "~/components/wordmark";
 import { LTR_NUMBER, kcal, longDate, macro, time } from "~/lib/format";
@@ -15,6 +17,17 @@ export default async function TodayPage() {
   const now = new Date();
   const day = await dayOfEating(db(), dayKeyOf(now));
   const hasEntries = day.entries.length > 0;
+
+  // Only food entries can become a dish; a dish already on the day would mean
+  // nesting one inside another.
+  const savable: SavableEntry[] = day.entries
+    .filter((entry) => entry.portion !== undefined)
+    .map((entry) => ({
+      id: entry.id,
+      foodId: entry.foodId,
+      foodName: entry.foodName,
+      portion: entry.portion!,
+    }));
 
   return (
     <main
@@ -175,6 +188,21 @@ export default async function TodayPage() {
         // simply states where things are.
         <p style={{ margin: "2.5rem 0 0", color: "var(--ink-soft)" }}>עוד לא נרשם דבר היום.</p>
       )}
+
+      {hasEntries ? <SaveAsDish entries={savable} /> : null}
+
+      <Link
+        href="/dishes"
+        data-testid="dishes-link"
+        style={{
+          marginTop: hasEntries ? "1.25rem" : "auto",
+          color: "var(--ink-faint)",
+          fontSize: "var(--step-1)",
+          alignSelf: "flex-start",
+        }}
+      >
+        המנות שלי
+      </Link>
 
       <Link
         href="/add"

@@ -18,3 +18,5 @@ export * from "./app/index";
 export * from "./infra/entries";
 export * from "./domain/measures";
 export * from "./infra/personal-foods";
+export * from "./domain/dish";
+export * from "./infra/dishes";

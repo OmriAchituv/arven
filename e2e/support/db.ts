@@ -1,4 +1,4 @@
-import { createDb, entries, foods, portionUnits } from "@arven/db";
+import { createDb, dishComponents, dishes, entries, foods, portionUnits } from "@arven/db";
 import { eq, inArray } from "drizzle-orm";
 
 /**
@@ -34,4 +34,13 @@ export async function clearPersonalFoods(): Promise<void> {
 
   await db.delete(portionUnits).where(inArray(portionUnits.foodId, mine.map((f) => f.id)));
   await db.delete(foods).where(eq(foods.source, "personal"));
+}
+
+/** Remove dishes the suite created. Components cascade. */
+export async function clearDishes(): Promise<void> {
+  const url = process.env.DATABASE_URL;
+  if (!url) return;
+  const db = createDb(url);
+  await db.delete(dishComponents);
+  await db.delete(dishes);
 }
