@@ -1,4 +1,5 @@
-import { createDb, entries } from "@arven/db";
+import { createDb, entries, foods, portionUnits } from "@arven/db";
+import { eq, inArray } from "drizzle-orm";
 
 /**
  * Empty the log before a test that asserts on the state of a day.
@@ -14,4 +15,23 @@ export async function clearTheDay(): Promise<void> {
   const url = process.env.DATABASE_URL;
   if (!url) return;
   await createDb(url).delete(entries);
+}
+
+/**
+ * Remove foods the suite created. Only ever touches `personal` rows, so the
+ * seeded Ministry and USDA data is never at risk.
+ */
+export async function clearPersonalFoods(): Promise<void> {
+  const url = process.env.DATABASE_URL;
+  if (!url) return;
+  const db = createDb(url);
+
+  const mine = await db
+    .select({ id: foods.id })
+    .from(foods)
+    .where(eq(foods.source, "personal"));
+  if (mine.length === 0) return;
+
+  await db.delete(portionUnits).where(inArray(portionUnits.foodId, mine.map((f) => f.id)));
+  await db.delete(foods).where(eq(foods.source, "personal"));
 }

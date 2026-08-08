@@ -1,6 +1,16 @@
 import { z } from "zod";
 
-import { dayOfEating, findFood, recordEating, weighIt } from "@arven/nutrition";
+import {
+  addMyFood,
+  dayOfEating,
+  editMyFood,
+  findFood,
+  myFoodUsage,
+  myFoods,
+  recordEating,
+  removeMyFood,
+  weighIt,
+} from "@arven/nutrition";
 import { dayKeyOf } from "@arven/nutrition";
 
 import { db } from "~/server/db";
@@ -30,6 +40,19 @@ const portion = z.discriminatedUnion("kind", [
   }),
 ]);
 
+/** A food as read off a packet. Per 100 g, because that is how labels are written. */
+const foodDraft = z.object({
+  name: z.string().trim().min(1, "a food needs a name"),
+  kcalPer100g: z.number().min(0),
+  proteinPer100g: z.number().min(0),
+  carbsPer100g: z.number().min(0),
+  fatPer100g: z.number().min(0),
+  units: z
+    .array(z.object({ name: z.string().trim().min(1), grams: z.number().positive() }))
+    .max(12)
+    .default([]),
+});
+
 export const nutritionRouter = router({
   search: publicProcedure
     .input(z.object({ query: z.string(), limit: z.number().min(1).max(50).optional() }))
@@ -55,6 +78,24 @@ export const nutritionRouter = router({
         eatenAt: input.eatenAt ?? new Date(),
       }),
     ),
+
+  myFoods: publicProcedure.query(() => myFoods(db())),
+
+  foodUsage: publicProcedure
+    .input(z.object({ foodId: z.string().min(1) }))
+    .query(({ input }) => myFoodUsage(db(), input.foodId)),
+
+  createFood: publicProcedure
+    .input(foodDraft)
+    .mutation(({ input }) => addMyFood(db(), crypto.randomUUID(), input)),
+
+  updateFood: publicProcedure
+    .input(z.object({ foodId: z.string().min(1), draft: foodDraft }))
+    .mutation(({ input }) => editMyFood(db(), input.foodId, input.draft)),
+
+  deleteFood: publicProcedure
+    .input(z.object({ foodId: z.string().min(1) }))
+    .mutation(({ input }) => removeMyFood(db(), input.foodId)),
 
   weigh: publicProcedure
     .input(z.object({ entryId: z.string().min(1), grams: z.number().positive() }))
