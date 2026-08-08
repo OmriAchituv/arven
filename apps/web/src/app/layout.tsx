@@ -28,7 +28,7 @@ const wordmark = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "ARVEN",
-  description: "הבריאות שלך. מובנת.",
+  description: "התמונה המלאה של הבריאות שלך.",
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "ARVEN" },
 };

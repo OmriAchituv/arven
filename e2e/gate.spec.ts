@@ -56,6 +56,8 @@ test.describe("the shell", () => {
 
     const manifest = await response.json();
     expect(manifest.display).toBe("standalone");
+    // The product speaks one line about itself, in one place.
+    expect(manifest.description).toBe("התמונה המלאה של הבריאות שלך.");
     expect(manifest.dir).toBe("rtl");
     expect(manifest.lang).toBe("he");
     expect(manifest.icons.length).toBeGreaterThan(0);
