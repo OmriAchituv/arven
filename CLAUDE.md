@@ -21,6 +21,33 @@ be rewritten when it does.
 **`docs/brand-brief.md` governs this project.** Read it before proposing a feature, writing UI copy,
 choosing a colour, or naming anything. Every decision should be dictated by it.
 
+**`docs/brand-appendix-hebrew.md` governs everything in Hebrew** — which is the entire product
+interface. Read it before writing a single Hebrew string. It is not a translation guide; it defines
+how ARVEN behaves for Israeli users. The rules that bite most often:
+
+- **Write gender-neutral Hebrew** (A7). Prefer `הצריכה היום הייתה גבוהה מהרגיל` over `אכלת יותר
+  מהרגיל`. This also makes the voice more observational and less judgmental. Direct second person is
+  still right for actions — `מה אכלת?`, `מה תרצה להוסיף?` (A8).
+- **Use the established microcopy** (A41): `היום`, `השבוע`, `נרשם`, `עריכה`, `מחיקה`, `היסטוריה`,
+  `תובנות`, `מגמות`, `טווח רגיל`. Don't invent a second word for something already named.
+- `קלוריות`, never `קק"ל`, in consumer copy (A11). `kcal` is acceptable in tight metric UI.
+- 24-hour time (A34). Dates as `8 באוגוסט` (A33). Western numerals always (A32).
+- The Israeli week starts **Sunday**, with Hebrew day names (A26).
+- Time-series charts still run left-to-right even in RTL (A29). Never reverse chronology.
+- Mixed-direction strings (`142 גרם`, `2,050 kcal`, `7:42 שעות`) must be QA'd by eye — they are the
+  most common RTL rendering bug.
+- Israeli food language is the vocabulary: `לאפה`, `סביח`, `בורקס`, `פרגית`, `שניצל`, `חלה`,
+  `ארוחת שישי`, `על האש` (A9). Never make the user translate their meal into database English.
+
+**Typography** (A30, A31): Hebrew must not evoke government services, newspapers, religious
+publishing or supermarket brands. The ARVEN wordmark stays Latin (A1), so no Hebrew serif is needed
+for branding — prefer a single refined, contemporary Hebrew sans with excellent numerals throughout.
+Note that Frank Ruhl Libre, despite being the obvious free choice, is the classic Hebrew *newspaper*
+face and is therefore ruled out by A31.
+
+`docs/brand-board.png` shows the visual direction and palette in situ. Its mockups depict the
+long-term vision, not iteration 1 scope — `docs/PRD.md` §8 defines scope.
+
 The two-part brand test for anything user-facing: *would this feel natural at a world-class longevity
 retreat, and inside a world-class technology product?* If only the first, it's too spa-like. If only
 the second, it's too technological.

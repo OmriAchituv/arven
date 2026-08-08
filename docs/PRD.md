@@ -293,10 +293,33 @@ Preview deploys are free. Total: $0.
 | **One user** | Omri, for the foreseeable future. Schema is user-scoped so this doesn't need rewriting. |
 | **Ownable** | If the domain core can't be read in one sitting, it has failed. |
 
-**Typography note:** the brief's typefaces (§30 — Canela, Tiempos, Instrument Serif) have **no
-Hebrew glyphs**. The Hebrew pairing holding the same editorial-serif-against-precise-sans tension is
-**Frank Ruhl Libre** with **Assistant** or **Heebo** — all free on Google Fonts. The brand direction
-survives intact; only the font names change. To be confirmed in the design session.
+### Hebrew
+
+Hebrew is not a locale, it is the product. [`brand-appendix-hebrew.md`](./brand-appendix-hebrew.md)
+governs every string, and is binding on the same terms as the brief.
+
+The rules with structural consequences — the ones that change data or layout rather than wording:
+
+| Rule | Consequence |
+|---|---|
+| Gender-neutral constructions (A7) | Copy is written observationally, so no gender field is needed to render a sentence |
+| Established microcopy (A41) | `היום`, `נרשם`, `עריכה`, `מחיקה`, `היסטוריה`, `טווח רגיל` — one word per concept, as with the domain glossary |
+| `קלוריות`, not `קק"ל` (A11) | `kcal` permitted only in tight metric UI |
+| 24-hour time (A34), `8 באוגוסט` (A33), Western numerals (A32) | Formatting decided once, in the UI package |
+| Week starts Sunday, Hebrew day names (A26) | Affects day navigation now, weekly summaries later |
+| Charts run left-to-right regardless of RTL (A29) | Never mirror chronology |
+| Israeli food vocabulary (A9) | `לאפה`, `סביח`, `בורקס`, `פרגית`, `שניצל`, `חלה` must be findable in search |
+
+**Typography.** The brief's typefaces (§30 — Canela, Tiempos, Instrument Serif) have **no Hebrew
+glyphs**, and appendix A31 rules out faces that evoke newspapers, government or religious publishing
+— which excludes Frank Ruhl Libre, the otherwise obvious free choice and *the* classic Hebrew
+newspaper face.
+
+The resolution comes from A1: the ARVEN wordmark stays Latin, so no Hebrew serif is required for
+branding. Hebrew is therefore set in a single refined contemporary sans with excellent numerals,
+which is what A30 means by *emotional equivalence rather than visual sameness*. The Latin editorial
+serif survives where it belongs — the wordmark, and large figures. Final face confirmed against the
+brand board when the first screen is built.
 
 ---
 
