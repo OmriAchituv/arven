@@ -5,6 +5,9 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${PORT}`;
 
 export default defineConfig({
   testDir: "./e2e",
+  // The suite logs real food into the real database; this puts it back.
+  globalSetup: "./e2e/support/global-setup.ts",
+  globalTeardown: "./e2e/support/global-teardown.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
