@@ -2,9 +2,12 @@
  * nutrition — bounded context.
  *
  * Owns: Food, Portion, Dish, Entry, Day
- * Arrives: iteration 1, slice #2
  *
- * This package exists now, empty, so that importing across contexts is a visible
- * decision rather than an accident. Nothing here may import another context.
+ * The domain layer is pure: no Next.js, no Drizzle, no model provider. If a
+ * rule about food can be stated without mentioning a database, it belongs here,
+ * and it is tested without one.
  */
-export {};
+export * from "./domain/provenance.ts";
+export * from "./domain/portion.ts";
+export * from "./domain/nutrients.ts";
+export * from "./domain/day.ts";
