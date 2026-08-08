@@ -177,7 +177,7 @@ packages/
 | Framework | Next.js (App Router) | Free tier, preview deploys, zero-config CI |
 | Monorepo | pnpm workspaces | DDD context boundaries need real package edges |
 | API | tRPC | End-to-end types; the compiler is the reviewer when reviewing on a phone |
-| Database | Neon Postgres | Free tier, proven in v2 |
+| Database | Neon Postgres | Never pauses; a DB branch per PR preview so migrations are exercised before production. Cold start is the accepted cost — see below |
 | ORM | Drizzle | No codegen, no engine binary, the SQL stays legible |
 | Auth | Passphrase in middleware → Google later | Iteration 1 has one user |
 | Hosting | Vercel | Free, preview per PR, deploy on merge |
@@ -187,6 +187,20 @@ packages/
 **The Apple Health ingest is REST, not tRPC** — an iOS Shortcut can only POST plain JSON to a URL.
 The endpoint accepts a generic payload so a native app or third-party bridge can post the identical
 body later without a schema change.
+
+**On Neon.** Chosen over Supabase because Supabase's free tier pauses a project after seven days
+without requests and requires a manual resume — which would break ARVEN precisely when returning
+from a trip, the worst possible moment for an app whose failure mode is disuse. Neon's ten branches
+per project also give each PR preview its own seeded database, so a migration is exercised before it
+reaches production.
+
+The accepted cost is **cold start**: compute scales to zero after five idle minutes, so the first
+query of the morning waits roughly half a second to a second. On a product promising calm, that
+needs handling rather than tolerating — wake the compute as the shell renders, so the delay is
+absorbed by paint rather than shown as a spinner.
+
+SQLite-family options (Turso and similar) offer a larger free tier and no cold start, but move Hebrew
+fuzzy search off `pg_trgm` and make the dialect a one-way door. Rejected on reversibility.
 
 ---
 

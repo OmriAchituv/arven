@@ -1,0 +1,28 @@
+{
+  "name": "arven",
+  "private": true,
+  "packageManager": "pnpm@10.11.0",
+  "scripts": {
+    "dev": "pnpm --filter @arven/web dev",
+    "build": "pnpm --filter @arven/web build",
+    "typecheck": "tsc --build --force && tsc -p apps/web/tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "db:generate": "pnpm --filter @arven/db generate",
+    "db:migrate": "pnpm --filter @arven/db migrate",
+    "lint": "next lint --dir apps/web"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
+  }
+}

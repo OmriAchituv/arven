@@ -1,0 +1,52 @@
+/*
+ * ARVEN brand tokens — docs/brand-brief.md §28-29.
+ *
+ * The skeleton needs only ground, ink and accent. The full system (numerals,
+ * provenance marks, motion) arrives with the first real screen, in slice #2,
+ * where it can be designed against something it actually has to render.
+ *
+ * Dark mode is warm charcoal, never pure black: "expensive medical
+ * instrumentation at night" (§29). Every colour is defined on bare :root so it
+ * still applies when the viewer's theme is unset.
+ */
+
+:root {
+  --ground: #f6f4f1; /* warm off-white */
+  --surface: #efebe4;
+  --edge: #dcd5c8; /* mineral beige */
+  --ink: #1c1e1d; /* charcoal */
+  --ink-soft: #4a4d4f; /* graphite */
+  --ink-faint: #86847e;
+  --accent: #2f4a43; /* mineral green */
+  --accent-soft: #6f8a82;
+
+  --step-1: 0.875rem;
+  --step0: 1rem;
+  --step1: 1.25rem;
+  --step2: 1.75rem;
+  --step3: 2.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #131614;
+    --surface: #1a1e1c;
+    --edge: #2a302d;
+    --ink: #e9e5de;
+    --ink-soft: #a8a79f;
+    --ink-faint: #7a7a73;
+    --accent: #93b4a8;
+    --accent-soft: #5e7a71;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #131614;
+  --surface: #1a1e1c;
+  --edge: #2a302d;
+  --ink: #e9e5de;
+  --ink-soft: #a8a79f;
+  --ink-faint: #7a7a73;
+  --accent: #93b4a8;
+  --accent-soft: #5e7a71;
+}
