@@ -7,7 +7,7 @@ test.describe("the gate", () => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByPlaceholder("סיסמה")).toBeVisible();
-    await expect(page.getByText("הבריאות שלך. מובנת.")).toBeVisible();
+    await expect(page.getByText("התמונה המלאה של הבריאות שלך.")).toBeVisible();
     await page.screenshot({ path: "test-results/screens/login.png", fullPage: true });
   });
 
@@ -56,6 +56,8 @@ test.describe("the shell", () => {
 
     const manifest = await response.json();
     expect(manifest.display).toBe("standalone");
+    // The product speaks one line about itself, in one place.
+    expect(manifest.description).toBe("התמונה המלאה של הבריאות שלך.");
     expect(manifest.dir).toBe("rtl");
     expect(manifest.lang).toBe("he");
     expect(manifest.icons.length).toBeGreaterThan(0);
