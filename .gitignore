@@ -21,3 +21,5 @@ blob-report/
 # TypeScript build output
 *.tsbuildinfo
 dist/
+
+# Screenshots are pushed here by CI, never committed locally
