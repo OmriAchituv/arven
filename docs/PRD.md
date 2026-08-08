@@ -224,6 +224,32 @@ Israel's Ministry of Health publishes its national nutrition database as open da
 The **יחידות מידה** tables are the reason iteration 1 is both token-free and low-friction: *"פיתה
 אחת"* and *"כוס קוטג׳"* resolve to real grams **by lookup, not by language model**.
 
+### What the MoH data actually contains
+
+Verified against the live source, 2026-08-08.
+
+**Ingest through the CKAN datastore API, not the CSVs.** `e.data.gov.il` sits behind a JavaScript
+bot challenge and returns an HTML page for every CSV URL. `data.gov.il/api/3/action/datastore_search`
+returns clean UTF-8 JSON, paginated and typed — strictly better than parsing CSVs.
+
+| Resource | Rows | Contents |
+|---|---|---|
+| products | 4,624 | 85 columns per 100 g, Hebrew **and English** names |
+| units | 108 | unit code → Hebrew name |
+| unit_map | 19,024 | product × unit → grams, about four per product |
+| recipes | 8,324 | composite dishes — out of scope until Dishes exist |
+
+**The join key is `products.Code`,** which `unit_map.mmitzrach` matches for 99.6% of rows. The
+plausible-looking `smlmitzrach` matches nothing and is a trap.
+
+The measures are per-product and specific — `חלה` carries thin, medium and thick slice weights;
+`שניצל` carries three sizes; `קוטג'` carries כף, כפית and גביע. Two caveats: `גרמים` and `קילוגרם`
+appear on nearly every product as unit conversions rather than household measures and should be kept
+out of the picker, and some rows are `FFQ-` prefixed survey composites.
+
+**Known gaps:** `סביח` and `פרגית` return nothing, despite both being named in appendix A9. The
+personal library covers them.
+
 USDA's Branded Foods set (multiple GB) is out of scope — it does not fit a free-tier database and
 Open Food Facts covers branded items better for an Israeli user.
 
@@ -357,7 +383,7 @@ Iteration 1 is done when every item in §8 is built, tested, deployed, and insta
 | Question | Resolve by |
 |---|---|
 | Which sample types export cleanly from a Shortcut in bulk? | Spike, iteration 3 |
-| MoH CSV encoding, schema and join keys across the four tables | Session 3 — first real contact with the data |
+| ~~MoH CSV encoding, schema and join keys~~ | **Resolved 2026-08-08** — see below |
 | Hebrew typeface pairing and the brand's dark mode | Design session |
 | Whether a passphrase gate is wanted at all before Google sign-in | Owner's call; the data is a food log |
 | How the MoH recipes table is used, if at all | After the Dish model is in use |
