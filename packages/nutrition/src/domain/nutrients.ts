@@ -1,6 +1,6 @@
-import type { Portion } from "./portion.ts";
-import { resolvePortion } from "./portion.ts";
-import type { Provenance } from "./provenance.ts";
+import type { Portion } from "./portion";
+import { resolvePortion } from "./portion";
+import type { Provenance } from "./provenance";
 
 /**
  * What a Food carries per 100 g. The four ARVEN reports, and nothing else —

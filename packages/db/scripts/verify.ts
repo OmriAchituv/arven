@@ -9,7 +9,7 @@
  */
 import { sql } from "drizzle-orm";
 
-import { createDb, foods, portionUnits } from "../src/index.ts";
+import { createDb, foods, portionUnits } from "../src/index";
 
 const EXPECTED = {
   mohFoods: 4_000,

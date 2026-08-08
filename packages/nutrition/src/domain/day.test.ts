@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { dayKeyOf, endOf, nextDay, previousDay, startOf } from "./day.ts";
+import { dayKeyOf, endOf, nextDay, previousDay, startOf } from "./day";
 
 /** A local wall-clock time in Israel, expressed as the instant it refers to. */
 function atJerusalem(iso: string, offset: "+02:00" | "+03:00"): Date {
