@@ -13,3 +13,6 @@ export * from "./domain/nutrients";
 export * from "./domain/day";
 export * from "./domain/hebrew";
 export * from "./infra/foods";
+export * from "./domain/logged-day";
+export * from "./app/index";
+export * from "./infra/entries";

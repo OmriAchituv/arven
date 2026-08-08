@@ -1,9 +1,125 @@
 {
-  "id": "202515f4-c6a4-4e99-b2be-07acb90e5a75",
-  "prevId": "6ae54d76-fd39-4f1c-9c86-251dd731ebc8",
+  "id": "50a4bde0-4f3f-4f54-a1cc-fb0d4fdc0073",
+  "prevId": "202515f4-c6a4-4e99-b2be-07acb90e5a75",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.entries": {
+      "name": "entries",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "food_id": {
+          "name": "food_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eaten_at": {
+          "name": "eaten_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "portion_kind": {
+          "name": "portion_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "grams": {
+          "name": "grams",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "unit_name": {
+          "name": "unit_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "unit_grams": {
+          "name": "unit_grams",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "unit_count": {
+          "name": "unit_count",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estimate_label": {
+          "name": "estimate_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estimate_grams": {
+          "name": "estimate_grams",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estimate_uncertainty": {
+          "name": "estimate_uncertainty",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "entries_eaten_at_idx": {
+          "name": "entries_eaten_at_idx",
+          "columns": [
+            {
+              "expression": "eaten_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "entries_food_id_foods_id_fk": {
+          "name": "entries_food_id_foods_id_fk",
+          "tableFrom": "entries",
+          "tableTo": "foods",
+          "columnsFrom": [
+            "food_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.foods": {
       "name": "foods",
       "schema": "",
