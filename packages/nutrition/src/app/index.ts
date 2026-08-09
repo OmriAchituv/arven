@@ -8,9 +8,10 @@ import { assembleDay } from "../domain/logged-day";
 import type { Portion } from "../domain/portion";
 import { entriesForDay, logEntry, weighEntry } from "../infra/entries";
 import type { FoodSearchResult } from "../infra/foods";
-import { nourishmentOfDish } from "../domain/dish";
+import type { DishPortion } from "../domain/dish";
+import { nourishmentOfDish, yieldOf } from "../domain/dish";
 import type { DishDraft } from "../infra/dishes";
-import { createDish, deleteDish, loadDishes, updateDish } from "../infra/dishes";
+import { createDish, deleteDish, loadDishes, setDishYield, updateDish } from "../infra/dishes";
 import { searchFoods } from "../infra/foods";
 import type { PersonalFoodDraft } from "../infra/personal-foods";
 import {
@@ -44,7 +45,7 @@ export async function dayOfEating(db: Db, day: DayKey): Promise<LoggedDay> {
 
 export type RecordEating = { id: string; eatenAt: Date } & (
   | { kind: "food"; foodId: string; portion: Portion }
-  | { kind: "dish"; dishId: string; scale: number }
+  | { kind: "dish"; dishId: string; portion: DishPortion }
 );
 
 /**
@@ -148,5 +149,15 @@ export async function dishesOfMine(db: Db) {
   const all = await loadDishes(db);
   // Sent with their computed totals, so a list can show what each one comes to
   // without the interface doing arithmetic of its own.
-  return all.map((dish) => ({ ...dish, nourishment: nourishmentOfDish(dish) }));
+  return all.map((dish) => ({
+    ...dish,
+    nourishment: nourishmentOfDish(dish),
+    yield: yieldOf(dish),
+  }));
+}
+
+/** Record what the finished dish weighed, once it is off the heat. */
+export async function weighDish(db: Db, dishId: string, grams: number): Promise<void> {
+  if (grams <= 0) throw new RangeError(`a dish must weigh something, got ${grams}`);
+  await setDishYield(db, dishId, grams);
 }

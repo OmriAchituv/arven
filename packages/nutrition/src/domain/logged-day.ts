@@ -1,5 +1,5 @@
 import type { DayKey } from "./day";
-import type { DishDefinition } from "./dish";
+import type { DishDefinition, DishPortion } from "./dish";
 import { nourishmentOfDish } from "./dish";
 import type { FoodValues, Nourishment, Nutrients } from "./nutrients";
 import { nourishmentOf, sum } from "./nutrients";
@@ -49,7 +49,7 @@ export type EntryInput = {
   eatenAt: Date;
 } & (
   | { kind: "food"; foodId: string; foodName: string; food: FoodValues; portion: Portion }
-  | { kind: "dish"; dish: DishDefinition; scale: number }
+  | { kind: "dish"; dish: DishDefinition; portion: DishPortion }
 );
 
 /**
@@ -69,7 +69,7 @@ export function assembleDay(day: DayKey, inputs: ReadonlyArray<EntryInput>): Log
             foodId: input.dish.id,
             foodName: input.dish.name,
             eatenAt: input.eatenAt,
-            nourishment: nourishmentOfDish(input.dish, input.scale),
+            nourishment: nourishmentOfDish(input.dish, input.portion),
           }
         : {
             id: input.id,

@@ -68,7 +68,7 @@ test.describe("dishes", () => {
     // A dish that cannot be inspected is the frozen number this model exists to
     // avoid, so opening one shows what is in it.
     await page.getByRole("button", { name: "הבוקר שלי" }).click();
-    await expect(page.getByText("200 ג׳")).toBeVisible();
+    await expect(page.getByText("200 ג׳", { exact: true })).toBeVisible();
     await page.screenshot({ path: "test-results/screens/dishes.png", fullPage: true });
 
     await clearTheDay();
@@ -125,5 +125,83 @@ test.describe("dishes", () => {
 
     // You cannot average a guess away.
     await expect(page.getByLabel("מוערך").first()).toBeVisible();
+  });
+});
+
+/**
+ * The trap this closes.
+ *
+ * `אורז, לבן, לא מבושל` is 365 kcal/100g and roughly triples in weight when
+ * cooked. Weigh a 380 g plate against the raw entry and ARVEN says about 1,390
+ * calories, with a confident mark beside it. Against a weighed pot it says
+ * about 500, which is the truth.
+ */
+test.describe("cooking a pot and eating a plate", () => {
+  test.skip(!process.env.DATABASE_URL, "no DATABASE_URL configured");
+
+  test.beforeEach(async () => {
+    await clearTheDay();
+    await clearDishes();
+    await clearPersonalFoods();
+  });
+
+  async function signIn(page: Page) {
+    await page.goto("/login");
+    await page.getByPlaceholder("סיסמה").fill(PASSPHRASE);
+    await page.getByRole("button", { name: "כניסה" }).click();
+    await expect(page).toHaveURL("/");
+  }
+
+  test("a plate from a weighed pot is grounded, and from an unweighed one is not", async ({ page }) => {
+    await signIn(page);
+
+    // 500 g of raw rice into a dish.
+    await page.goto("/add");
+    await page.getByTestId("food-search").fill("אורז לא מבושל");
+    const results = page.getByTestId("results").getByRole("listitem");
+    await expect(results.first()).toBeVisible({ timeout: 20_000 });
+    await results.first().click();
+    await page.getByRole("button", { name: "גרמים" }).click();
+    await page.getByTestId("amount").fill("500");
+    await page.getByTestId("log").click();
+    await expect(page).toHaveURL("/");
+
+    await page.getByTestId("save-as-dish").click();
+    await page.getByTestId("dish-name").fill("סיר אורז");
+    await page.getByTestId("confirm-dish").click();
+    await expect(page).toHaveURL("/dishes");
+    await clearTheDay();
+
+    await page.getByRole("button", { name: "סיר אורז" }).click();
+
+    // Before weighing the pot, a plate by weight is an admitted guess.
+    await page.getByTestId("plate-weight").fill("380");
+    await page.getByTestId("log-dish-grams").click();
+    await expect(page).toHaveURL("/");
+    await expect(page.getByLabel("מוערך").first()).toBeVisible();
+    await page.screenshot({ path: "test-results/screens/plate-assumed.png", fullPage: true });
+
+    await clearTheDay();
+
+    // Weigh the pot, and the same plate becomes a measurement.
+    await page.goto("/dishes");
+    await page.getByRole("button", { name: "סיר אורז" }).click();
+    await page.getByTestId("pot-weight").fill("1400");
+    await page.getByTestId("save-yield").click();
+    await expect(page.getByText(/אחרי בישול/)).toBeVisible();
+
+    await page.getByTestId("plate-weight").fill("380");
+    await page.getByTestId("log-dish-grams").click();
+    await expect(page).toHaveURL("/");
+    await expect(page.getByLabel("מבוסס").first()).toBeVisible();
+
+    // 500 g of raw rice is about 1,825 kcal; 380/1400 of it is about 495.
+    // Logged against the raw entry directly it would have been nearly 1,390.
+    const total = await page.locator("main").textContent();
+    const kcal = Number(total?.match(/([\d,]+)\s*קלוריות/)?.[1]?.replace(/,/g, ""));
+    expect(kcal).toBeGreaterThan(400);
+    expect(kcal).toBeLessThan(600);
+
+    await page.screenshot({ path: "test-results/screens/plate-weighed.png", fullPage: true });
   });
 });

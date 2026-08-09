@@ -6,6 +6,7 @@ import {
   changeDish,
   dishesOfMine,
   dropDish,
+  weighDish,
   dayOfEating,
   editMyFood,
   findFood,
@@ -60,6 +61,7 @@ const foodDraft = z.object({
 /** A dish is a name and what is in it. Never a total. */
 const dishDraft = z.object({
   name: z.string().trim().min(1, "a dish needs a name"),
+  yieldGrams: z.number().positive().nullable().optional(),
   components: z
     .array(z.object({ foodId: z.string().min(1), portion }))
     .min(1, "a dish needs something in it")
@@ -103,6 +105,10 @@ export const nutritionRouter = router({
     .input(z.object({ dishId: z.string().min(1), draft: dishDraft }))
     .mutation(({ input }) => changeDish(db(), input.dishId, input.draft)),
 
+  weighDish: publicProcedure
+    .input(z.object({ dishId: z.string().min(1), grams: z.number().positive() }))
+    .mutation(({ input }) => weighDish(db(), input.dishId, input.grams)),
+
   deleteDish: publicProcedure
     .input(z.object({ dishId: z.string().min(1) }))
     .mutation(({ input }) => dropDish(db(), input.dishId)),
@@ -111,7 +117,11 @@ export const nutritionRouter = router({
     .input(
       z.object({
         dishId: z.string().min(1),
-        scale: z.number().positive().max(20).default(1),
+        // A fraction of it, or the weight that ended up on the plate.
+        portion: z.discriminatedUnion("kind", [
+          z.object({ kind: z.literal("scale"), scale: z.number().positive().max(20) }),
+          z.object({ kind: z.literal("grams"), grams: z.number().positive() }),
+        ]),
         eatenAt: z.coerce.date().optional(),
       }),
     )
@@ -120,7 +130,7 @@ export const nutritionRouter = router({
         id: crypto.randomUUID(),
         kind: "dish",
         dishId: input.dishId,
-        scale: input.scale,
+        portion: input.portion,
         eatenAt: input.eatenAt ?? new Date(),
       }),
     ),

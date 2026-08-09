@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { dishFromEntries, nourishmentOfDish } from "./dish";
+import { dishFromEntries, nourishmentOfDish, yieldOf } from "./dish";
 import type { DishDefinition } from "./dish";
 import { isEstimated, isGrounded } from "./provenance";
 
@@ -59,7 +59,7 @@ describe("scaling", () => {
     // The point of storing components: half a dish is half of each thing in it,
     // not half of a number someone wrote down once.
     const whole = nourishmentOfDish(shake);
-    const half = nourishmentOfDish(shake, 0.5);
+    const half = nourishmentOfDish(shake, { kind: "scale", scale: 0.5 });
 
     expect(half.nutrients.kcal).toBeCloseTo(whole.nutrients.kcal / 2);
     expect(half.nutrients.protein).toBeCloseTo(whole.nutrients.protein / 2);
@@ -71,14 +71,14 @@ describe("scaling", () => {
   });
 
   it("says a half the way a person would", () => {
-    expect(nourishmentOfDish(shake, 0.5).portionLabel).toBe("שייק אחרי אימון × ½");
-    expect(nourishmentOfDish(shake, 0.25).portionLabel).toBe("שייק אחרי אימון × ¼");
-    expect(nourishmentOfDish(shake, 2).portionLabel).toBe("שייק אחרי אימון × 2");
+    expect(nourishmentOfDish(shake, { kind: "scale", scale: 0.5 }).portionLabel).toBe("שייק אחרי אימון × ½");
+    expect(nourishmentOfDish(shake, { kind: "scale", scale: 0.25 }).portionLabel).toBe("שייק אחרי אימון × ¼");
+    expect(nourishmentOfDish(shake, { kind: "scale", scale: 2 }).portionLabel).toBe("שייק אחרי אימון × 2");
   });
 
   it("refuses a scale of nothing", () => {
-    expect(() => nourishmentOfDish(shake, 0)).toThrow(RangeError);
-    expect(() => nourishmentOfDish(shake, -1)).toThrow(RangeError);
+    expect(() => nourishmentOfDish(shake, { kind: "scale", scale: 0 })).toThrow(RangeError);
+    expect(() => nourishmentOfDish(shake, { kind: "scale", scale: -1 })).toThrow(RangeError);
   });
 });
 
@@ -124,7 +124,7 @@ describe("provenance of a dish", () => {
 
   it("scales without changing how sure we are", () => {
     // Halving a dish does not make it better or worse known.
-    expect(nourishmentOfDish(shake, 0.5).provenance.uncertainty).toBe(
+    expect(nourishmentOfDish(shake, { kind: "scale", scale: 0.5 }).provenance.uncertainty).toBe(
       nourishmentOfDish(shake).provenance.uncertainty,
     );
   });
@@ -150,5 +150,67 @@ describe("building one from a day", () => {
       gramsPerUnit: 100,
       count: 1,
     });
+  });
+});
+
+describe("what the dish yields", () => {
+  it("assumes the raw sum when nobody weighed it", () => {
+    const y = yieldOf(shake);
+    expect(y.grams).toBe(400);
+    expect(y.measured).toBe(false);
+  });
+
+  it("uses the weighed figure when there is one", () => {
+    const y = yieldOf({ ...shake, yieldGrams: 380 });
+    expect(y.grams).toBe(380);
+    expect(y.measured).toBe(true);
+  });
+});
+
+describe("eating part of a pot", () => {
+  // 500 g raw rice at 365 kcal/100g, cooked down to a 1,400 g pot.
+  const pot = {
+    id: "dish:2",
+    name: "אורז",
+    yieldGrams: 1400,
+    components: [
+      {
+        foodId: "rice",
+        foodName: "אורז, לבן, לא מבושל",
+        food: { per100g: { kcal: 365, protein: 7, carbs: 80, fat: 0.6 } },
+        portion: { kind: "grams" as const, grams: 500 },
+      },
+    ],
+  };
+
+  it("divides the raw macros by the finished weight", () => {
+    // The trap this exists to close: weighing 380 g of cooked rice against the
+    // raw entry gives 1,387 kcal. Against the pot it gives about 495.
+    const plate = nourishmentOfDish(pot, { kind: "grams", grams: 380 });
+    expect(plate.nutrients.kcal).toBeCloseTo(365 * 5 * (380 / 1400), 1);
+    expect(plate.nutrients.kcal).toBeLessThan(600);
+  });
+
+  it("stays grounded when the pot was weighed", () => {
+    expect(isGrounded(nourishmentOfDish(pot, { kind: "grams", grams: 380 }).provenance)).toBe(true);
+  });
+
+  it("becomes an estimate when the pot was not weighed", () => {
+    // Dividing by an assumed yield is a guess however well the components were
+    // weighed, and a wide one — so weighing the pot is visibly worth doing.
+    const unweighed = { ...pot, yieldGrams: null };
+    const plate = nourishmentOfDish(unweighed, { kind: "grams", grams: 380 });
+    expect(isEstimated(plate.provenance)).toBe(true);
+    expect(plate.provenance.uncertainty).toBeGreaterThanOrEqual(0.3);
+  });
+
+  it("keeps a fraction exact even without a weighed yield", () => {
+    // Half of it is half of it whatever the pot weighs.
+    const unweighed = { ...pot, yieldGrams: null };
+    expect(isGrounded(nourishmentOfDish(unweighed, { kind: "scale", scale: 0.5 }).provenance)).toBe(true);
+  });
+
+  it("says the weight back", () => {
+    expect(nourishmentOfDish(pot, { kind: "grams", grams: 380 }).portionLabel).toBe("אורז · 380 ג׳");
   });
 });
