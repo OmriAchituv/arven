@@ -56,11 +56,17 @@ function portionFromColumns(row: DishComponentRow): Portion {
 export interface DishDraft {
   name: string;
   components: Array<{ foodId: string; portion: Portion }>;
+  /** What the finished dish weighs, when it was weighed. */
+  yieldGrams?: number | null;
 }
 
 export async function createDish(db: Db, id: string, draft: DishDraft): Promise<string> {
   const dishId = `dish:${id}`;
-  await db.insert(dishes).values({ id: dishId, name: draft.name });
+  await db.insert(dishes).values({
+    id: dishId,
+    name: draft.name,
+    yieldGrams: draft.yieldGrams ?? null,
+  });
   await writeComponents(db, dishId, draft.components);
   return dishId;
 }
@@ -68,7 +74,7 @@ export async function createDish(db: Db, id: string, draft: DishDraft): Promise<
 export async function updateDish(db: Db, dishId: string, draft: DishDraft): Promise<void> {
   await db
     .update(dishes)
-    .set({ name: draft.name, updatedAt: new Date() })
+    .set({ name: draft.name, yieldGrams: draft.yieldGrams ?? null, updatedAt: new Date() })
     .where(eq(dishes.id, dishId));
 
   // Replaced wholesale rather than diffed: a dish is small, and reconciling
@@ -138,6 +144,7 @@ export async function loadDishes(db: Db, ids?: string[]): Promise<DishDefinition
   return rows.map((row) => ({
     id: row.id,
     name: row.name,
+    yieldGrams: row.yieldGrams,
     components: byDish.get(row.id) ?? [],
   }));
 }
@@ -145,4 +152,12 @@ export async function loadDishes(db: Db, ids?: string[]): Promise<DishDefinition
 export async function loadDish(db: Db, dishId: string): Promise<DishDefinition | null> {
   const [dish] = await loadDishes(db, [dishId]);
   return dish ?? null;
+}
+
+/** Set the finished weight without touching the components. */
+export async function setDishYield(db: Db, dishId: string, grams: number): Promise<void> {
+  await db
+    .update(dishes)
+    .set({ yieldGrams: grams, updatedAt: new Date() })
+    .where(eq(dishes.id, dishId));
 }

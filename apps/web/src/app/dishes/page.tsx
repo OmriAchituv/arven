@@ -30,21 +30,31 @@ export default function DishesPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [plate, setPlate] = useState("");
+  const [pot, setPot] = useState("");
 
   const load = useCallback(() => {
     api.nutrition.dishes.query().then(setDishes);
   }, []);
   useEffect(load, [load]);
 
-  async function log(dish: Dish, scale: number) {
+  async function log(dish: Dish, portion: { kind: "scale"; scale: number } | { kind: "grams"; grams: number }) {
     setSaving(dish.id);
     try {
-      await api.nutrition.logDish.mutate({ dishId: dish.id, scale });
+      await api.nutrition.logDish.mutate({ dishId: dish.id, portion });
       router.push("/");
     } catch {
       setSaving(null);
       setError("לא הצלחנו לרשום.");
     }
+  }
+
+  async function weigh(dish: Dish) {
+    const grams = Number(pot);
+    if (!Number.isFinite(grams) || grams <= 0) return;
+    await api.nutrition.weighDish.mutate({ dishId: dish.id, grams });
+    setPot("");
+    load();
   }
 
   async function remove(dish: Dish) {
@@ -119,11 +129,78 @@ export default function DishesPage() {
                       ))}
                     </ul>
 
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        flexWrap: "wrap",
+                        fontSize: "var(--step-1)",
+                        color: "var(--ink-faint)",
+                      }}
+                    >
+                      <span>
+                        {dish.yield.measured ? "אחרי בישול" : "גולמי"} {Math.round(dish.yield.grams)} ג׳
+                      </span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        value={pot}
+                        onChange={(event) => setPot(event.target.value)}
+                        placeholder="שקילת הסיר"
+                        data-testid="pot-weight"
+                        style={{ ...smallField, width: "7.5rem" }}
+                      />
+                      <button onClick={() => weigh(dish)} data-testid="save-yield" style={link}>
+                        שמירה
+                      </button>
+                    </div>
+
+                    {!dish.yield.measured ? (
+                      // Rice roughly triples; a roast loses water. Dividing by
+                      // the raw sum is an assumption, so it is stated rather
+                      // than hidden behind a confident number.
+                      <p style={{ margin: 0, fontSize: "12.5px", color: "var(--ink-faint)" }}>
+                        המשקל הגולמי משמש כברירת מחדל. שקילת הסיר אחרי הבישול תדייק מנה לפי משקל.
+                      </p>
+                    ) : null}
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        value={plate}
+                        onChange={(event) => setPlate(event.target.value)}
+                        placeholder="כמה גרם אכלת"
+                        data-testid="plate-weight"
+                        style={{ ...smallField, width: "9rem" }}
+                      />
+                      <button
+                        onClick={() => log(dish, { kind: "grams", grams: Number(plate) })}
+                        disabled={!(Number(plate) > 0) || saving === dish.id}
+                        data-testid="log-dish-grams"
+                        style={{
+                          font: "inherit",
+                          fontSize: "var(--step-1)",
+                          padding: "0.45rem 0.9rem",
+                          borderRadius: "2px",
+                          border: "1px solid var(--accent)",
+                          background: Number(plate) > 0 ? "var(--accent)" : "transparent",
+                          color: Number(plate) > 0 ? "var(--ground)" : "var(--accent)",
+                          cursor: Number(plate) > 0 ? "pointer" : "default",
+                        }}
+                      >
+                        רישום לפי משקל
+                      </button>
+                    </div>
+
                     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                       {SCALES.map((scale) => (
                         <button
                           key={scale.value}
-                          onClick={() => log(dish, scale.value)}
+                          onClick={() => log(dish, { kind: "scale", scale: scale.value })}
                           disabled={saving === dish.id}
                           data-testid={`log-dish-${scale.value}`}
                           style={{
@@ -160,6 +237,16 @@ export default function DishesPage() {
     </main>
   );
 }
+
+const smallField: React.CSSProperties = {
+  font: "inherit",
+  fontSize: "var(--step-1)",
+  padding: "0.4rem 0.6rem",
+  borderRadius: "2px",
+  border: "1px solid var(--edge)",
+  background: "var(--surface)",
+  color: "var(--ink)",
+};
 
 const link: React.CSSProperties = {
   font: "inherit",

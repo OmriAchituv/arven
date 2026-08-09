@@ -7,6 +7,7 @@ import type { DayKey } from "../domain/day";
 import { endOf, startOf } from "../domain/day";
 import type { EntryInput } from "../domain/logged-day";
 import { loadDishes } from "./dishes";
+import type { DishPortion } from "../domain/dish";
 import type { Portion } from "../domain/portion";
 
 /**
@@ -64,7 +65,7 @@ function portionFromColumns(row: Entry): Portion {
 
 export type LogEntryCommand = { id: string; eatenAt: Date } & (
   | { kind: "food"; foodId: string; portion: Portion }
-  | { kind: "dish"; dishId: string; scale: number }
+  | { kind: "dish"; dishId: string; portion: DishPortion }
 );
 
 export async function logEntry(db: Db, command: LogEntryCommand): Promise<void> {
@@ -73,7 +74,9 @@ export async function logEntry(db: Db, command: LogEntryCommand): Promise<void> 
       ? {
           id: command.id,
           dishId: command.dishId,
-          dishScale: command.scale,
+          // Exactly one is set, so the record says which was actually stated.
+          dishScale: command.portion.kind === "scale" ? command.portion.scale : null,
+          dishGrams: command.portion.kind === "grams" ? command.portion.grams : null,
           eatenAt: command.eatenAt,
         }
       : {
@@ -138,9 +141,14 @@ export async function entriesForDay(db: Db, day: DayKey): Promise<EntryInput[]> 
     if (entry.dishId) {
       const dish = byId.get(entry.dishId);
       // A dish deleted out from under an entry would otherwise crash the day.
-      return dish
-        ? [{ id: entry.id, eatenAt: entry.eatenAt, kind: "dish", dish, scale: entry.dishScale ?? 1 }]
-        : [];
+      if (!dish) return [];
+
+      const portion: DishPortion =
+        entry.dishGrams != null
+          ? { kind: "grams", grams: entry.dishGrams }
+          : { kind: "scale", scale: entry.dishScale ?? 1 };
+
+      return [{ id: entry.id, eatenAt: entry.eatenAt, kind: "dish", dish, portion }];
     }
 
     if (!food) return [];

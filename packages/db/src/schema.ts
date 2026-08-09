@@ -135,10 +135,18 @@ export const entries = pgTable(
     /** Set when this entry is a food at a portion. */
     foodId: text("food_id").references(() => foods.id),
 
-    /** Set instead when it is a Dish, logged whole. */
+    /** Set instead when it is a Dish. */
     dishId: text("dish_id").references(() => dishes.id),
-    /** 1 for a full dish, 0.5 for half of one. */
+
+    /**
+     * How much of it, recorded as it was said rather than normalised.
+     *
+     * `dishScale` for "I had half of it" — relative, and still half if the
+     * recipe changes. `dishGrams` for "I had 380 g" — absolute, and what you
+     * get when you weigh your plate. Exactly one is ever set.
+     */
     dishScale: doublePrecision("dish_scale"),
+    dishGrams: doublePrecision("dish_grams"),
 
     eatenAt: timestamp("eaten_at", { withTimezone: true }).notNull(),
 
@@ -180,6 +188,18 @@ export type NewEntry = typeof entries.$inferInsert;
 export const dishes = pgTable("dishes", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+
+  /**
+   * What the finished thing weighs, once cooked.
+   *
+   * Null means nobody weighed it, and the sum of the raw components stands in.
+   * That is exact for a shake, where nothing evaporates, and wrong for anything
+   * cooked — rice roughly triples, a roast loses water. So the distinction is
+   * kept rather than defaulted away: a portion taken by weight from an
+   * unweighed dish is an estimate, and says so.
+   */
+  yieldGrams: doublePrecision("yield_grams"),
+
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
