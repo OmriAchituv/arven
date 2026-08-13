@@ -26,8 +26,8 @@ Two previous versions were built and abandoned.
 
 | | |
 |---|---|
-| **v1** | Telegram nutritionist bot. Telegraf on Fly.io. |
-| **v2** | `~/health_hub` — Next.js 14 + Prisma + Vercel. Ten phases, all completed 2026-04-03, deployed, 79 commits, never pushed to a remote. |
+| **v1** | Telegram nutritionist bot. Telegraf on Fly.io. Lived at `packages/bot` in the v2 repo until Phase 10 deleted it; recoverable from that history at `f265b9e^`. |
+| **v2** | github.com/OmriAchituv/health-hub (private) — Next.js 14 + Prisma + Vercel. Ten phases, all completed 2026-04-03, deployed, 79 commits. |
 
 Both were declared done by feature list. Both were abandoned within months. The stated reasons for
 v2's failure, in the owner's words: the numbers weren't trustworthy, logging had too much friction,

@@ -74,10 +74,20 @@ These are not preferences. Check any proposal against them.
 
 ## History worth knowing
 
-A v1 exists at `~/health_hub` — Next.js 14 + Prisma + Vercel, 79 commits, never pushed to a remote,
-abandoned 2026-04-05. It covered similar ground (meals, dishes, chat, weight, Telegram intake).
-ARVEN is a deliberate from-scratch rebuild, not a port. Read v1 for lessons and pitfalls; do not copy
-its structure.
+ARVEN is the **third** attempt. Both predecessors are readable, and both are worth understanding
+before their mistakes get repeated.
+
+**v1** — a Telegram nutritionist bot: Telegraf on Fly.io, Neon, Groq. It lived at `packages/bot`
+inside the v2 repo until Phase 10 deleted it, so it survives only in that repo's history:
+`git checkout f265b9e^ -- packages/bot`.
+
+**v2** — github.com/OmriAchituv/health-hub (private). Next.js 14 + Prisma + Vercel, 79 commits,
+abandoned 2026-04-05. It covered similar ground (meals, dishes, chat, weight, Telegram intake), and
+it is the source of the two anti-patterns named later in this file: the `shared` junk drawer, and
+food data that was never seeded.
+
+ARVEN is a deliberate from-scratch rebuild, not a port. Read them for lessons and pitfalls; do not
+copy their structure.
 
 ## Working agreements
 
